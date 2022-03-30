@@ -2,12 +2,13 @@ class Tweet{
   constructor(twt,client){
     if(typeof twt==="string")this.id=twt
     else{
+      if(!twt.id)throw new ReferenceError("idは必須です")
       for(const key in twt){
          this[key]=twt[key]
       }
       if(twt.author_id)this.user=new User(twt.author_id,client)
     }
-    this.client=client
+    this.__proto__.client=client
   }
 
   fetch(queryParameters){
@@ -48,7 +49,7 @@ class Tweet{
   }
 
   getQuoteTweets(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters})
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters:queryParameters||Tweet.defaultQueryParameters})
     if(response.data)response.data=response.data.map(v=>new Tweet(v,this.client))
     return response
   }
@@ -75,6 +76,48 @@ class Tweet{
 
   deleteRetweet(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
+  }
+
+  static get allQueryParameters(){
+    return{
+      expansions:Tweet.expansions,
+      "media.fields":Tweet.mediaFields,
+      "place.fields":Tweet.placeFields,
+      "poll.fields":Tweet.pollFields,
+      "tweet.fields":Tweet.tweetFields,
+      "user.fields":Tweet.userFields
+    }
+  }
+
+  static get defaultQueryParameters(){
+    return {
+      expansions:["author_id","in_reply_to_user_id","referenced_tweets.id"],
+    }
+  }
+
+  static get expansions(){
+    return ["attachments.poll_ids","attachments.media_keys","author_id","entities.mentions.username","geo.place_id", "in_reply_to_user_id","referenced_tweets.id","referenced_tweets.id.author_id"]
+    
+  }
+
+  static get mediaFields(){
+    return["duration_ms","height","media_key", "preview_image_url","type","url","width","public_metrics","non_public_metrics","organic_metrics","promoted_metrics","alt_text"]
+  }
+
+  static get placeFields(){
+    return["contained_within","country","country_code", "full_name", "geo", "id", "name", "place_type"]
+  }
+
+  static get pollFields(){
+    return["duration_minutes","end_datetime","id","options","voting_status"]
+  }
+
+  static get tweetFields(){
+    return["attachments","author_id","context_annotations","conversation_id","created_at","entities","geo","id, in_reply_to_user_id", "lang","non_public_metrics","public_metrics","organic_metrics","promoted_metrics","possibly_sensitive","referenced_tweets","reply_settings","source","text", "withheld"]
+  }
+
+  static get userFields(){
+    return["created_at","description","entities","id","location","name","pinned_tweet_id","profile_image_url","protected","public_metrics","url","username","verified","withheld"]
   }
 
 }

@@ -6,7 +6,7 @@ class User{
         this[key]=u[key]
       }
     }
-    this.client=client
+    this.__proto__.client=client
   }
   
   fetch(queryParameters){
@@ -17,14 +17,26 @@ class User{
     return this
   }
 
-  getLiking(){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`)
+  getLiking(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
+      queryParameters:queryParameters||Tweet.defaultQueryParameters
+    })
     response.data=response.data.map(v=>new Tweet(v,this.client))
     return response
   }
+
+
   getTimeLine(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{queryParameters})
-    Logger.log(response)
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
+      queryParameters:queryParameters||Tweet.defaultQueryParameters
+    })
+    response.data=response.data.map(v=>new Tweet(v,this.client))
+    return response
+  }
+  getMentioned(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
+      queryParameters:queryParameters||Tweet.defaultQueryParameters
+    })
     response.data=response.data.map(v=>new Tweet(v,this.client))
     return response
   }
@@ -41,8 +53,14 @@ class User{
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/following/${this.id}`,{method:"DELETE"})
   }
 
-  getFollowing(){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`)
+  getFollowing(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{queryParameters})
+    response.data=response.data.map(v=>new User(v,this.client))
+    return response
+  }
+
+  getFollowers(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{queryParameters})
     response.data=response.data.map(v=>new User(v,this.client))
     return response
   }
@@ -51,9 +69,15 @@ class User{
 }
 
 class ClientUser extends User{
-  getBlocking(){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`)
+  getBlocking(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{queryParameters})
     response.data=response.data.map(v=>new User(v,this.client))
+    return response
+  }
+
+  getMuting(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{queryParameters})
+    response.data=response.data.mao(v=>new User(v,this.client))
     return response
   }
 }
