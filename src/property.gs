@@ -1,7 +1,7 @@
 class UtilProp{
   constructor(property,client){
     this.property=property
-    this.key=`TwitterAPI_${client.clientId}_${client.serviceName}_${client.oauthVersion}`
+    this.key=`TwitterAPI_${client.oauthVersion}_${client.serviceName}`
   }
 
   getProperties(){
@@ -14,7 +14,7 @@ class UtilProp{
   }
 
   getProperty(key){
-    return JSON.parse(this.property.getProperty(this.key))[key]
+    return this.getProperties()[key]
   }
 
   setProperty(key,value){

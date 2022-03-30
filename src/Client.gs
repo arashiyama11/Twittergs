@@ -1,20 +1,22 @@
 class Client{
   constructor({property=ScriptProperties,CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SEACRET=property.getProperty("CLIENT_SEACRET"),BEARER_TOKEN=property.getProperty("BEARER_TOKEN"),API_KEY=property.getProperty("API_KEY"),API_SEACRET=property.getProperty("API_SEACRET"),serviceName,id,oauthVersion="2.0",ACCESS_TOKEN,ACCESS_TOKEN_SEACRET}={}){
     if(!serviceName)throw new ReferenceError("serviceNameは必須です")
-    if(oauthVersion==="2.0"||oauthVersion==="2"||oauthVersion===2){
+    this.serviceName=serviceName
+    if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
-    }else{
+    }else if(oauthVersion==="1.0a"){
       this.oauthVersion="1.0a"
+    }else {
+      throw new ReferenceError(`oauthVersionは"2.0"と"1.0a"のみ有効です`)
     }
-    property=new UtilProp(property,client)
+    this.property=new UtilProp(property,this)
+    if(this.property.getProperties()===null)this.property.resetProperty()
     if(this.oauthVersion==="2.0"){
       if(!CLIENT_ID)throw new ReferenceError("oauthVersion2.0ではCLIENT_IDは必須です")
       if(!CLIENT_SEACRET)throw new ReferenceError("oauthVersion2.0ではCLIENT_SEACRETは必須です")
-      this._state=property.getProperty("_"+serviceName+"_state")
-
-      this._code=property.getProperty("_"+serviceName+"_code")
-      this._refreshToken=property.getProperty("_"+serviceName+"_refresh_token")
-      this.accessToken=property.getProperty("_"+serviceName+"_access_token")
+      this._code=this.property.getProperty("code")
+      this._refreshToken=this.property.getProperty("refresh_token")
+      this.accessToken=this.property.getProperty("access_token")
       this.clientId=CLIENT_ID
       this.clientSeacret=CLIENT_SEACRET
       this.BASIC=Utilities.base64Encode(this.clientId+":"+this.clientSeacret)
@@ -57,12 +59,11 @@ class Client{
     }else{
       if(!API_KEY)throw new ReferenceError("oauthVersion1.0aではAPI_KEYは必須です")
       if(!API_SEACRET)throw new ReferenceError("oauthVersion1.0aではAPI_SEACRETは必須です")
-      this.accessToken=ACCESS_TOKEN
-      this.accessTokenSeacret=ACCESS_TOKEN_SEACRET
       this.apiKey=API_KEY
       this.apiSeacret=API_SEACRET
+      this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
+      this.oauthTokenSecret=ACCESS_TOKEN_SEACRET||this.property.getProperty("oauth_token_secret")
     }
-    this.serviceName=serviceName
     this.user=new ClientUser(id,this)
   }
   setId(id){
@@ -79,9 +80,10 @@ class Client{
         .withArgument("serviceName", this.serviceName)
         .createToken();
       this._state = state
-      this.scope = scopes
-      PropertiesService.getUserProperties().setProperty("_" + this.serviceName + "_state", state)
-      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Client.getCallBackURL()}&scope=${(scopes || this.defaultScopes).join("%20")}&state=${this._state}&code_challenge=challenge&code_challenge_method=plain`
+      this.scope.status = scopes
+      this.property.setProperty("scope",scopes)
+      this.property.setProperty("state",state)
+      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Client.getCallBackURL()}&scope=${(scopes || this.scope.default).join("%20")}&state=${this._state}&code_challenge=challenge&code_challenge_method=plain`
     }else{
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
@@ -89,7 +91,10 @@ class Client{
         .withArgument("serviceName", this.serviceName)
         .createToken();
       let url=`https://api.twitter.com/oauth/request_token?oauth_callback=${Client.fixedEncodeURIComponent(Client.getCallBackURL()+"?state="+state)}`
-      const {oauth_token,oauth_token_secret}=this.fetch(url,{method:"POST"})
+      this.oauthTokenSecret=null
+      this.oauthToken=null
+      const {oauth_token,oauth_token_secret}=this.fetch(url,{method:"POST",contentType:"application/x-www-form-urlencoded"})
+      this.property.setProperty("oauth_token_secret",oauth_token_secret)
       return `https://api.twitter.com/oauth/authorize?oauth_token=${oauth_token}`
     }
   }
@@ -122,11 +127,12 @@ class Client{
 
     result=Client.fixedEncodeURIComponent(oauthArr.map(v=>v.join("=")).join("&"))
     let base=`${method}&${Client.fixedEncodeURIComponent(url)}&${result}`
+
     let signing=""
-    if(this.accessTokenSeacret)
-    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&${Client.fixedEncodeURIComponent(this.accessTokenSeacret)}`
+    if(this.oauthTokenSecret)
+    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
     else
-    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&`    
+    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&` 
     return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
   }
   static fixedEncodeURIComponent(str) {
@@ -138,22 +144,42 @@ class Client{
 
   isAuthorized(e){
     if(e.parameter.error)return false
-    const {code,state}=e.parameter
-    if(state===this._state){
-      const props=PropertiesService.getUserProperties()
-      props.setProperty("_"+this.serviceName+"_code",code)
-      this._code=code
-      try{
-        const {refresh_token,access_token}=this._getRefreshToken()
-        props.setProperty("_"+this.serviceName+"_refresh_token",refresh_token)
-        props.setProperty("_"+this.serviceName+"_access_token",access_token)
+    if(this.oauthVersion==="2.0"){
+      const { code } = e.parameter
+      this.property.setProperty("code", code)
+      this._code = code
+      try {
+        const { refresh_token, access_token } = this._getRefreshToken()
+        this.property.setProperties({
+          refresh_token: refresh_token,
+          access_token: access_token
+        })
         return true
-      }catch(err){
+      } catch (err) {
         throw err
       }
-    }else{
-      return false
     }
+
+    let {oauth_verifier,oauth_token}=e.parameter
+    try{
+      let result=(UrlFetchApp.fetch(`https://api.twitter.com/oauth/access_token?oauth_consumer_key=${this.apiKey}&oauth_token=${oauth_token}&oauth_verifier=${oauth_verifier}`,{
+        method:"POST"
+      }))
+      result=result.getContentText().split("&").map(v=>v.split("="))
+      let obj={}
+      for(const [key,value] of result)obj[key]=value
+      const {oauth_token_secret,user_id}=obj
+      oauth_token=obj.oauth_token
+      this.property.setProperties({
+        oauth_token,
+        oauth_token_secret,
+        user_id
+      })
+      return true
+    }catch(e){
+      throw e
+    }
+
   }
 
   _getRefreshToken(){
@@ -175,13 +201,15 @@ class Client{
         "Authorization":"Basic "+this.BASIC
       },
     }
+    Logger.log(this.BASIC)
+    Logger.log(this._refreshToken)
     const response=JSON.parse(UrlFetchApp.fetch(`https://api.twitter.com/2/oauth2/token?grant_type=refresh_token&refresh_token=${this._refreshToken}`,options))
     Logger.log(response)
     this._refreshToken=response.refresh_token
     this.accessToken=response.access_token
-    PropertiesService.getUserProperties().setProperties({
-      ["_"+this.serviceName+"_refresh_token"]:this._refreshToken,
-      ["_"+this.serviceName+"_access_token"]:this.accessToken
+    this.property.setProperties({
+      refresh_token:this._refreshToken,
+      access_token:this.accessToken
     })
   }
 
@@ -213,6 +241,12 @@ class Client{
     }else{
       if(!options)options={}
       options.method=options.method?.toUpperCase()||"GET"
+      if(!options.oauthParameters)options.oauthParameters={}
+      if(this.oauthToken)options.oauthParameters={oauth_token:this.oauthToken,...options.oauthParameters}
+      if(!options.contentType){
+        if(url.includes("1.1"))options.contentType="application/x-www-form-urlencoded"
+        else options.contentType="application/json"
+      }
       const oauthOptions={
         ...options.oauthParameters,
         oauth_consumer_key:this.apiKey,
@@ -221,13 +255,24 @@ class Client{
         oauth_timestamp:Math.floor(Date.now()/1000),
         oauth_version:"1.0"
       }
-      oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
-      let authorizationString="OAuth "+Object.keys(oauthOptions).sort().map(key=>{
-        return `${Client.fixedEncodeURIComponent(key)}="${Client.fixedEncodeURIComponent(oauthOptions[key])}"`
-      }).join(", ")
+      if(options.contentType==="application/x-www-form-urlencoded"&&options.payload){
+        url+="?"+Object.keys(options.payload).map(v=>`${v}=${Client.fixedEncodeURIComponent(options.payload[v])}`).join("&")
+        oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
+        delete options.payload
+      }else{
+        oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
+      }
+      let authorizationString="OAuth "+Object.keys(oauthOptions).sort().map(key=>
+        `${Client.fixedEncodeURIComponent(key)}="${Client.fixedEncodeURIComponent(oauthOptions[key])}"`
+      ).join(", ")
       if(!options.headers)options.headers={}
-      options.headers={"Authorization":authorizationString}
+      options.headers={...options.headers,"Authorization":authorizationString}
       delete options.oauthParameters
+      if(options.contentType==="application/json"&&typeof options.parameter==="object")
+        options.payload=JSON.stringify(options.payload)
+      if(options.contentType==="multipart/form-data")
+        delete options.contentType
+
       let result=UrlFetchApp.fetch(url,options)
       try{
         return JSON.parse(result)
@@ -257,11 +302,18 @@ class Client{
   }
 
   postTweet(payload){
-    const option={
+    if(this.oauthVersion==="2.0"){
+      const option = {
+        method: "POST",
+        payload: JSON.stringify(payload)
+      }
+      let response = this.fetch("https://api.twitter.com/2/tweets", option)
+      return new Tweet(response.data, this)
+    }
+    let response=this.fetch("https://api.twitter.com/2/tweets",{
       method:"POST",
       payload:JSON.stringify(payload)
-    }
-    let response=this.fetch("https://api.twitter.com/2/tweets",option)
+    })
     return new Tweet(response.data,this)
   }
 
@@ -282,6 +334,70 @@ class Client{
   static refreshAll({CLIENT_ID,CLIENT_SEACRET,serviceNames}={}){
     serviceNames.forEach((serviceName)=>{
       new Client({CLIENT_ID,CLIENT_SEACRET,serviceName}).tokenRefresh()
+    })
+  }
+
+  uploadMedia(fileName){
+    const file=DriveApp.getFilesByName(fileName).next()
+    const blob = Utilities.newBlob(
+      file.getBlob().getBytes(),
+      file.getMimeType(),
+      file.getName()
+    );
+    return this.fetch("https://upload.twitter.com/1.1/media/upload.json",{
+      method:"post",
+      contentType:"multipart/form-data",
+      payload:{
+        media:blob,
+      },
+      muteHttpExceptions:true
+    })
+  }
+
+
+  uploadBigMedia(fileName){
+    const file=DriveApp.getFilesByName(fileName).next()
+    const url="https://upload.twitter.com/1.1/media/upload.json"
+
+    const {media_id_string}=this.fetch(url,{
+      method:"POST",
+      payload:{
+        command:"INIT",
+        total_bytes:file.getSize(),
+        media_type:file.getMimeType()
+      }
+    })
+
+    Logger.log("INIT done")
+
+    let mediaData=Utilities.base64Encode(file.getBlob().getBytes())
+    let segmentSize=5*1000*1000
+    for(let i=0;i<Math.ceil(file.getSize()/segmentSize);i++){
+      const blob = Utilities.newBlob(
+        Utilities.base64Decode(mediaData.substring(i*segmentSize,(i+1)*segmentSize)),
+        file.getMimeType(),
+        file.getName()
+      );
+      this.fetch(url,{
+        method:"POST",
+        contentType:"multipart/form-data",
+        payload:{
+          command:"APPEND",
+          media_id:media_id_string,
+          media:blob,
+          segment_index:i+""
+        }
+      })
+    }
+
+    Logger.log("APPEND done")
+
+    return this.fetch(url,{
+      method:"POST",
+      payload:{
+        command:"FINALIZE",
+        media_id:media_id_string
+      }
     })
   }
 }
@@ -305,7 +421,7 @@ class AppOnlyClient{
       url+="?"+uriOption.join("&")
       delete options.queryParameters
     }
-    Logger.log(url)
+
     return JSON.parse(UrlFetchApp.fetch(url,options))
   }
 
