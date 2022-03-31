@@ -1,26 +1,27 @@
 class Client{
-  constructor({property=ScriptProperties,CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SEACRET=property.getProperty("CLIENT_SEACRET"),BEARER_TOKEN=property.getProperty("BEARER_TOKEN"),API_KEY=property.getProperty("API_KEY"),API_SEACRET=property.getProperty("API_SEACRET"),serviceName,id,oauthVersion="2.0",ACCESS_TOKEN,ACCESS_TOKEN_SEACRET}={}){
-    if(!serviceName)throw new ReferenceError("serviceNameは必須です")
+  constructor({property=ScriptProperties,CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),serviceName,id,oauthVersion="2.0",ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+    if(!serviceName)throw new Error("serviceNameは必須です")
     this.serviceName=serviceName
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
       this.oauthVersion="1.0a"
     }else {
-      throw new ReferenceError(`oauthVersionは"2.0"と"1.0a"のみ有効です`)
+      throw new TypeError(`oauthVersionは"2.0"と"1.0a"のみ有効です`)
     }
     this.property=new UtilProp(property,this)
     if(this.property.getProperties()===null)this.property.resetProperty()
     if(this.oauthVersion==="2.0"){
-      if(!CLIENT_ID)throw new ReferenceError("oauthVersion2.0ではCLIENT_IDは必須です")
-      if(!CLIENT_SEACRET)throw new ReferenceError("oauthVersion2.0ではCLIENT_SEACRETは必須です")
+      if(!CLIENT_ID)throw new Error("oauthVersion2.0ではCLIENT_IDは必須です")
+      if(!CLIENT_SECRET)throw new Error("oauthVersion2.0ではCLIENT_SECRETは必須です")
       this._code=this.property.getProperty("code")
       this._refreshToken=this.property.getProperty("refresh_token")
       this.accessToken=this.property.getProperty("access_token")
       this.clientId=CLIENT_ID
-      this.clientSeacret=CLIENT_SEACRET
-      this.BASIC=Utilities.base64Encode(this.clientId+":"+this.clientSeacret)
+      this.clientSecret=CLIENT_SECRET
+      this.BASIC=Utilities.base64Encode(Client.fixedEncodeURIComponent(this.clientId)+":"+Client.fixedEncodeURIComponent(this.clientSecret))
       this.scope = {
+        status:this.property.getProperty("scope"),
         all: [
           "tweet.read",
           "tweet.write",
@@ -57,14 +58,15 @@ class Client{
         ]
       }
     }else{
-      if(!API_KEY)throw new ReferenceError("oauthVersion1.0aではAPI_KEYは必須です")
-      if(!API_SEACRET)throw new ReferenceError("oauthVersion1.0aではAPI_SEACRETは必須です")
+      if(!API_KEY)throw new Error("oauthVersion1.0aではAPI_KEYは必須です")
+      if(!API_SECRET)throw new Error("oauthVersion1.0aではAPI_SECRETは必須です")
       this.apiKey=API_KEY
-      this.apiSeacret=API_SEACRET
+      this.apiSecret=API_SECRET
       this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
-      this.oauthTokenSecret=ACCESS_TOKEN_SEACRET||this.property.getProperty("oauth_token_secret")
+      this.oauthTokenSecret=ACCESS_TOKEN_SECRET||this.property.getProperty("oauth_token_secret")
     }
-    this.user=new ClientUser(id,this)
+    this.restTime=restTime
+    if(id)this.user=new ClientUser(id,this)
   }
   setId(id){
     this.user=new ClientUser(id,this)
@@ -73,17 +75,14 @@ class Client{
  
   authorize({scopes}={}){
     if(this.oauthVersion==="2.0"){
-      if (scopes && !scopes.includes("offline.access")) throw new ReferenceError("offline.accessは必須です")
-      let state = ScriptApp.newStateToken()
+      const state = ScriptApp.newStateToken()
         .withMethod("authCallBack")
         .withTimeout(3600)
         .withArgument("serviceName", this.serviceName)
         .createToken();
-      this._state = state
-      this.scope.status = scopes
       this.property.setProperty("scope",scopes)
       this.property.setProperty("state",state)
-      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Client.getCallBackURL()}&scope=${(scopes || this.scope.default).join("%20")}&state=${this._state}&code_challenge=challenge&code_challenge_method=plain`
+      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Client.getCallBackURL()}&scope=${(scopes || this.scope.default).join("%20")}&state=${state}&code_challenge=challenge&code_challenge_method=plain`
     }else{
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
@@ -130,9 +129,9 @@ class Client{
 
     let signing=""
     if(this.oauthTokenSecret)
-    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
+    signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
     else
-    signing=`${Client.fixedEncodeURIComponent(this.apiSeacret)}&` 
+    signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&` 
     return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
   }
   static fixedEncodeURIComponent(str) {
@@ -237,6 +236,7 @@ class Client{
         url += "?" + uriOption.join("&")
         delete options.queryParameters
       }
+      Utilities.sleep(this.restTime)
       return JSON.parse(UrlFetchApp.fetch(url, options))
     }else{
       if(!options)options={}
@@ -272,7 +272,7 @@ class Client{
         options.payload=JSON.stringify(options.payload)
       if(options.contentType==="multipart/form-data")
         delete options.contentType
-
+      Utilities.sleep(this.restTime)
       let result=UrlFetchApp.fetch(url,options)
       try{
         return JSON.parse(result)
@@ -331,9 +331,9 @@ class Client{
     return "https://github.com/arashi-yama/TwitterAPI"
   }
 
-  static refreshAll({CLIENT_ID,CLIENT_SEACRET,serviceNames}={}){
+  static refreshAll({CLIENT_ID,CLIENT_SECRET,serviceNames}={}){
     serviceNames.forEach((serviceName)=>{
-      new Client({CLIENT_ID,CLIENT_SEACRET,serviceName}).tokenRefresh()
+      new Client({CLIENT_ID,CLIENT_SECRET,serviceName}).tokenRefresh()
     })
   }
 

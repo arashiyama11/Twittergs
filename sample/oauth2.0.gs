@@ -1,41 +1,57 @@
 const {API_KEY,API_SEACRET,BEARER_TOKEN,CLIENT_ID,CLIENT_SEACRET}=ScriptProperties.getProperties()
 
-function authorize(){
-  const client=new Client({
-    serviceName:"prefrontal",
-    id:"1446364436147568641",
-    oauthVersion:"2.0"
-  })
-  Logger.log(client.authorize())
+
+const appOnlyClient=new AppOnlyClient(BEARER_TOKEN)
+
+function getUserId(){
+  Logger.log(appOnlyClient.getUserByUsername("prefrontal9").data.id)
 }
 
-function dev(){
-  const client=new Client({
-    serviceName:"prefrontal9",
-    id:"1502849807156932608",
-    oauthVersion:"1.0a",
-    API_KEY,
-    API_SEACRET,
-  })
+const v2_client = new Client({
+  serviceName: "prefrontal",
+  id: "1502849807156932608",
+  oauthVersion: "2.0",
+  CLIENT_ID: CLIENT_ID,
+  CLIENT_SECRET: CLIENT_SEACRET
+})
+
+
+function v2_authorize(){
+  Logger.log(v2_client.authorize())
 }
 
-function authCallBack(e){
-  if(e.parameter?.error==="access_denied")return HtmlService.createHtmlOutput("認証をキャンセルしました")
 
-  let version=""
-  if(e.parameter.oauth_verifier)version="1.0a"
-  else version="2.0"
-
-  const client=new Client({
-    serviceName:e.parameter.serviceName,
-    oauthVersion:version
-  })
-  if(client.isAuthorized(e)){
-    return HtmlService.createHtmlOutput("成功<br>"+JSON.stringify(e,null,"  ").replace(/\n/g,"<br>"))
-  }else{
-    return HtmlService.createHtmlOutput("失敗<br>"+JSON.stringify(e,null,"  ").replace(/\n/g,"<br>"))
-  }
+function v2_tweet(){
+  Logger.log(v2_client.postTweet({text:"hello world"}))
 }
+
+function v2_searchTweet(){
+  Logger.log(v2_client.getTweets({query:"japan"}))
+}
+
+function v2_like(){
+  Logger.log(v2_client.getTweetById("1509339652456652808").data.like())
+}
+
+
+//OAuth2.0はTwitterAPIv2.0しか叩けません
+function v2_hitMyself(){
+  //v2のほとんどのエンドポイントのcontentTypeはapplication/jsonです。
+  Logger.log(v2_client.fetch(`https://api.twitter.com/2/users/${client.user.id}/following`,{
+    method:"POST",
+    payload:JSON.stringify({
+      target_user_id:"1406096161249890306"
+    }),
+    contentType:"application/json"
+  }))
+  //optionのmethodが空欄だとmethodはGETになります。
+  //なので、この場合methodは省略可能です。
+  Logger.log(v2_client.fetch(`https://api.twitter.com/2/users/${client.user.id}/followers`,{
+    method:"GET"
+  }))
+}
+
+
 
 function refreshToken(){
   Client.refreshAll({serviceNames:["prefrontal"]})
