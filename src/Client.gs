@@ -103,7 +103,9 @@ class Client{
     return Utilities.base64Encode(Array(32).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join(""))
   }
 
-  _makeSignature({method,url,oauthParams}={}){
+  _oldmakeSignature({method,url,oauthParams}={}){
+    Logger.log(url)
+
     let result=""
     let encodedOauthParams={}
     for(let key in oauthParams)encodedOauthParams[Client.fixedEncodeURIComponent(key)]=Client.fixedEncodeURIComponent(oauthParams[key]
@@ -123,6 +125,7 @@ class Client{
       else if(a>b)return 1
       else return 0
     })
+    Logger.log(oauthArr)
 
     result=Client.fixedEncodeURIComponent(oauthArr.map(v=>v.join("=")).join("&"))
     let base=`${method}&${Client.fixedEncodeURIComponent(url)}&${result}`
@@ -132,6 +135,25 @@ class Client{
     signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
     else
     signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&` 
+    Logger.log(base)
+    Logger.log(Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing)))
+    return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
+  }
+  _makeSignature({method,url,oauthParams}={}){
+    let params=[]
+    if(url.includes("?")){
+      params=url.split("?")[1].split("&").map(v=>v.split("="))
+      url=url.split("?")[0]
+    }
+    params=[...params,...Object.entries(oauthParams).map(([key,v])=>[key,Client.fixedEncodeURIComponent(v)])]
+    params.sort(([a],[b])=>{
+      return a-b
+    })
+    const paramsResult=params.map(([key,value])=>`${Client.fixedEncodeURIComponent(key)}=${(value)}`).join("&")
+    const base=`${method}&${Client.fixedEncodeURIComponent(url)}&${Client.fixedEncodeURIComponent(paramsResult)}`
+    if(!this.oauthTokenSecret)this.oauthTokenSecret=""
+    const signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
+
     return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
   }
   static fixedEncodeURIComponent(str) {
@@ -252,7 +274,7 @@ class Client{
         oauth_consumer_key:this.apiKey,
         oauth_nonce:Client._makeNonce(),
         oauth_signature_method:"HMAC-SHA1",
-        oauth_timestamp:Math.floor(Date.now()/1000),
+        oauth_timestamp:Math.floor(Date.now()/1000)+"",
         oauth_version:"1.0"
       }
       if(options.contentType==="application/x-www-form-urlencoded"&&options.payload){

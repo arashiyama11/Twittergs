@@ -8,3 +8,8 @@ function auth(){
   })
   Logger.log(client.authorize())
 }
+
+
+function test(){
+  Logger.log(Client.fixedEncodeURIComponent("dkxIR29WazM1cjZUYXJEenBZN1pyVDZJYmJKSUIwMlA="))
+}
