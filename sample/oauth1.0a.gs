@@ -11,5 +11,5 @@ function auth(){
 
 
 function test(){
-  Logger.log(Client.fixedEncodeURIComponent("dkxIR29WazM1cjZUYXJEenBZN1pyVDZJYmJKSUIwMlA="))
+  Logger.log(UrlFetchApp.fetch("youtube.com").getHeaders())
 }

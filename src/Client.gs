@@ -102,43 +102,7 @@ class Client{
     let chars=["A","B","C","D","E","F","G","H","I","J","K","L","M",",N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","1","2","3","4","5","6","7","8","9","0"]
     return Utilities.base64Encode(Array(32).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join(""))
   }
-
-  _oldmakeSignature({method,url,oauthParams}={}){
-    Logger.log(url)
-
-    let result=""
-    let encodedOauthParams={}
-    for(let key in oauthParams)encodedOauthParams[Client.fixedEncodeURIComponent(key)]=Client.fixedEncodeURIComponent(oauthParams[key]
-)
-    let params=[]
-    if(url.includes("?")){
-      params=url.split("?")[1].split("&").map(v=>v.split("="))
-      url=url.split("?")[0]
-    }
-    let oauthArr=params
-    for(let key in encodedOauthParams){
-      oauthArr.push([key,encodedOauthParams[key]])
-    }
-    
-    oauthArr.sort((a,b)=>{
-      if(a<b)return -1
-      else if(a>b)return 1
-      else return 0
-    })
-    Logger.log(oauthArr)
-
-    result=Client.fixedEncodeURIComponent(oauthArr.map(v=>v.join("=")).join("&"))
-    let base=`${method}&${Client.fixedEncodeURIComponent(url)}&${result}`
-
-    let signing=""
-    if(this.oauthTokenSecret)
-    signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&${Client.fixedEncodeURIComponent(this.oauthTokenSecret)}`
-    else
-    signing=`${Client.fixedEncodeURIComponent(this.apiSecret)}&` 
-    Logger.log(base)
-    Logger.log(Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing)))
-    return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
-  }
+  
   _makeSignature({method,url,oauthParams}={}){
     let params=[]
     if(url.includes("?")){
@@ -158,13 +122,12 @@ class Client{
   }
   static fixedEncodeURIComponent(str) {
     return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
-      return '%' + c.charCodeAt(0).toString(16);
-    });
+      return '%' + c.charCodeAt(0).toString(16)
+    })
   }
   
-
   isAuthorized(e){
-    if(e.parameter.error)return false
+    if(e.parameter.error)throw e.parameter.error
     if(this.oauthVersion==="2.0"){
       const { code } = e.parameter
       this.property.setProperty("code", code)
@@ -183,9 +146,9 @@ class Client{
 
     let {oauth_verifier,oauth_token}=e.parameter
     try{
-      let result=(UrlFetchApp.fetch(`https://api.twitter.com/oauth/access_token?oauth_consumer_key=${this.apiKey}&oauth_token=${oauth_token}&oauth_verifier=${oauth_verifier}`,{
+      let result=UrlFetchApp.fetch(`https://api.twitter.com/oauth/access_token?oauth_consumer_key=${this.apiKey}&oauth_token=${oauth_token}&oauth_verifier=${oauth_verifier}`,{
         method:"POST"
-      }))
+      })
       result=result.getContentText().split("&").map(v=>v.split("="))
       let obj={}
       for(const [key,value] of result)obj[key]=value
@@ -264,7 +227,7 @@ class Client{
       if(!options)options={}
       options.method=options.method?.toUpperCase()||"GET"
       if(!options.oauthParameters)options.oauthParameters={}
-      if(this.oauthToken)options.oauthParameters={oauth_token:this.oauthToken,...options.oauthParameters}
+      if(this.oauthToken)options.oauthParameters.oauthtoken=this.oauthToken
       if(!options.contentType){
         if(url.includes("1.1"))options.contentType="application/x-www-form-urlencoded"
         else options.contentType="application/json"
@@ -284,22 +247,20 @@ class Client{
       }else{
         oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
       }
-      let authorizationString="OAuth "+Object.keys(oauthOptions).sort().map(key=>
+      const authorizationString="OAuth "+Object.keys(oauthOptions).sort().map(key=>
         `${Client.fixedEncodeURIComponent(key)}="${Client.fixedEncodeURIComponent(oauthOptions[key])}"`
       ).join(", ")
       if(!options.headers)options.headers={}
-      options.headers={...options.headers,"Authorization":authorizationString}
+      options.headers.Authorization=authorizationString
       delete options.oauthParameters
-      if(options.contentType==="application/json"&&typeof options.parameter==="object")
-        options.payload=JSON.stringify(options.payload)
       if(options.contentType==="multipart/form-data")
         delete options.contentType
       Utilities.sleep(this.restTime)
-      let result=UrlFetchApp.fetch(url,options)
+      let response=UrlFetchApp.fetch(url,options)
       try{
-        return JSON.parse(result)
+        return JSON.parse(response)
       }catch(e){
-        result=result.getContentText().split("&").map(v=>v.split("="))
+        response=response.getContentText().split("&").map(v=>v.split("="))
         let obj={}
         for(const [key,value] of result)obj[key]=value
         return obj
