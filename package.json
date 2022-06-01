@@ -1,0 +1,16 @@
+{
+  "name": "twittergs",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "auth": "clasp login --creds creds.json",
+    "latestLog": "node build/getLatestLog.js",
+    "build": "node build/build.js"
+  },
+  "keywords": [],
+  "author": "arashiyama <arashiyama1120@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.47"
+  }
+}
