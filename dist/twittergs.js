@@ -1,8 +1,9 @@
-class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),serviceName,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+function Twittergs(){
+  class Client{
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
-    if(!serviceName)throw new Error("serviceNameは必須です")
-    this.serviceName=serviceName
+    if(!name)throw new Error("nameは必須です")
+    this.name=name
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
@@ -51,7 +52,7 @@ class Client{
       const challenge=Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,code_verifier,Utilities.Charset.US_ASCII)).replace(/=/g,"")
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
-        .withArgument("serviceName",this.serviceName)
+        .withArgument("name",this.name)
         .withArgument("code_verifier",code_verifier)
         .createToken()
       this.property.setProperties({
@@ -62,7 +63,7 @@ class Client{
     }else{
       const state=ScriptApp.newStateToken()
         .withTimeout(3600)
-        .withArgument("serviceName",this.serviceName)
+        .withArgument("name",this.name)
         .withMethod("authCallBack")
         .createToken()
       this.oauthTokenSecret=null
@@ -109,7 +110,7 @@ class Client{
 
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
     return new Client({
-      serviceName:e.parameter.serviceName,
+      name:e.parameter.name,
       oauthVersion:e.parameter.code?"2.0":"1.0a",
       API_KEY,
       API_SECRET,
@@ -185,9 +186,9 @@ class Client{
     })
   }
 
-  static refreshAll({CLIENT_ID,CLIENT_SECRET,serviceNames}={}){
-    serviceNames.forEach((serviceName)=>{
-      new Client({CLIENT_ID,CLIENT_SECRET,serviceName}).refresh()
+  static refreshAll({CLIENT_ID,CLIENT_SECRET,names}={}){
+    names.forEach((name)=>{
+      new Client({CLIENT_ID,CLIENT_SECRET,name}).refresh()
     })
   }
 
@@ -412,8 +413,8 @@ class Client{
   static getAuthorizedUsers(property=PropertiesService.getUserProperties()){
     let data=property.getKeys().filter(v=>v.startsWith("Twittergs_")).map(v=>v.split("_")).map(([_,version,...n])=>({version,n:n.join("_")}))
     return [
-      data.filter(v=>v.version==="1.0a").map(v=>v.n).filter(serviceName=>new Client({serviceName,oauthVersion:"1.0a"}).hasAuthorized()),
-      data.filter(v=>v.verison==="2.0").map(v=>v.n).filter(serviceName=>new Client({serviceName,oauthVersion:"1.0a"}).hasAuthorized())
+      data.filter(v=>v.version==="1.0a").map(v=>v.n).filter(name=>new Client({name,oauthVersion:"1.0a"}).hasAuthorized()),
+      data.filter(v=>v.verison==="2.0").map(v=>v.n).filter(name=>new Client({name,oauthVersion:"1.0a"}).hasAuthorized())
     ]
   }
 }
@@ -476,11 +477,7 @@ class AppOnlyClient{
       }
     })).access_token
   }
-}
-
-
-
-class Tweet{
+}class Tweet{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -570,7 +567,6 @@ class Tweet{
 
   static get expansions(){
     return ["attachments.poll_ids","attachments.media_keys","author_id","entities.mentions.username","geo.place_id", "in_reply_to_user_id","referenced_tweets.id","referenced_tweets.id.author_id"]
-    
   }
 
   static get mediaFields(){
@@ -602,17 +598,7 @@ class ClientTweet extends Tweet{
       method:"DELETE",
     })
   }
-}
-
-
-
-
-
-
-
-
-
-class User{
+}class User{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -690,17 +676,7 @@ class ClientUser extends User{
     response.data=response.data.mao(v=>new User(v,this.client))
     return response
   }
-}
-
-
-
-
-
-
-
-
-
-const TWITTER_API_DATA={
+}const TWITTER_API_DATA={
   scopes:[
     "tweet.read",
     "tweet.write",
@@ -748,7 +724,7 @@ class WithMetaArray extends Array{
 class Property{
   constructor(property,client){
     this.property=property
-    this.key=`Twittergs_${client.oauthVersion}_${client.serviceName}`
+    this.key=`Twittergs_${client.oauthVersion}_${client.name}`
     this.data=JSON.parse(property.getProperty(this.key)||"{}")
   }
 
@@ -782,7 +758,5 @@ class Property{
     this.property.setProperty(this.key,"{}")
   }
 }
-
-
-
-
+  return {Client,AppOnlyClient}
+}

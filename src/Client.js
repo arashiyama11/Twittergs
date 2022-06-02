@@ -1,8 +1,8 @@
 class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),serviceName,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
-    if(!serviceName)throw new Error("serviceNameは必須です")
-    this.serviceName=serviceName
+    if(!name)throw new Error("nameは必須です")
+    this.name=name
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
@@ -51,7 +51,7 @@ class Client{
       const challenge=Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,code_verifier,Utilities.Charset.US_ASCII)).replace(/=/g,"")
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
-        .withArgument("serviceName",this.serviceName)
+        .withArgument("name",this.name)
         .withArgument("code_verifier",code_verifier)
         .createToken()
       this.property.setProperties({
@@ -62,7 +62,7 @@ class Client{
     }else{
       const state=ScriptApp.newStateToken()
         .withTimeout(3600)
-        .withArgument("serviceName",this.serviceName)
+        .withArgument("name",this.name)
         .withMethod("authCallBack")
         .createToken()
       this.oauthTokenSecret=null
@@ -79,11 +79,6 @@ class Client{
     }
   }
 
-  static makeNonce(size=32){
-    const chars="ABCDEFGHIDKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz1234567890"
-    return Array(size).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join("")
-  }
-  
   _makeSignature({method,url,oauthParams}={}){
     let params=[]
     if(url.includes("?")){
@@ -101,15 +96,11 @@ class Client{
     return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
   }
 
-  static fixedEncodeURIComponent(str) {
-    return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
-      return '%' + c.charCodeAt(0).toString(16)
-    })
-  }
+  
 
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
     return new Client({
-      serviceName:e.parameter.serviceName,
+      name:e.parameter.name,
       oauthVersion:e.parameter.code?"2.0":"1.0a",
       API_KEY,
       API_SECRET,
@@ -185,14 +176,10 @@ class Client{
     })
   }
 
-  static refreshAll({CLIENT_ID,CLIENT_SECRET,serviceNames}={}){
-    serviceNames.forEach((serviceName)=>{
-      new Client({CLIENT_ID,CLIENT_SECRET,serviceName}).refresh()
+  static refreshAll({CLIENT_ID,CLIENT_SECRET,names}={}){
+    names.forEach((name)=>{
+      new Client({CLIENT_ID,CLIENT_SECRET,name}).refresh()
     })
-  }
-
-  static getCallBackURL(){
-    return `https://script.google.com/macros/d/${ScriptApp.getScriptId()}/usercallback`
   }
 
   fetch(url,options){
@@ -254,23 +241,6 @@ class Client{
     }
   }
 
-  static buildParam(obj){
-    let result=[]
-    for(const key in obj){
-      const value=Array.isArray(obj[key])?obj[key].join():obj[key]
-      result.push(Util.parcentEncode(key)+"="+Util.parcentEncode(value))
-    }
-    return result.join("&")
-  }
-
-  static parseParam(str){
-    if(str.includes("?"))str=str.split("?")[1]
-    let params=str.split("&").map(v=>v.split("=").map(decodeURIComponent))
-    const obj={}
-    params.forEach(([key,value])=>obj[key]=value)
-    return obj
-  }
-  
   hasAuthorized(){
     if(this.oauthVersion==="2.0")return !!this.accessToken
     return !!this.oauthToken
@@ -412,11 +382,12 @@ class Client{
   static getAuthorizedUsers(property=PropertiesService.getUserProperties()){
     let data=property.getKeys().filter(v=>v.startsWith("Twittergs_")).map(v=>v.split("_")).map(([_,version,...n])=>({version,n:n.join("_")}))
     return [
-      data.filter(v=>v.version==="1.0a").map(v=>v.n).filter(serviceName=>new Client({serviceName,oauthVersion:"1.0a"}).hasAuthorized()),
-      data.filter(v=>v.verison==="2.0").map(v=>v.n).filter(serviceName=>new Client({serviceName,oauthVersion:"1.0a"}).hasAuthorized())
+      data.filter(v=>v.version==="1.0a").map(v=>v.n).filter(name=>new Client({name,oauthVersion:"1.0a"}).hasAuthorized()),
+      data.filter(v=>v.verison==="2.0").map(v=>v.n).filter(name=>new Client({name,oauthVersion:"1.0a"}).hasAuthorized())
     ]
   }
 }
+
 
 
 class AppOnlyClient{
