@@ -88,7 +88,6 @@ class Tweet{
 
   static get expansions(){
     return ["attachments.poll_ids","attachments.media_keys","author_id","entities.mentions.username","geo.place_id", "in_reply_to_user_id","referenced_tweets.id","referenced_tweets.id.author_id"]
-    
   }
 
   static get mediaFields(){
@@ -121,8 +120,3 @@ class ClientTweet extends Tweet{
     })
   }
 }
-
-
-
-
-
