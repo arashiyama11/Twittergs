@@ -307,16 +307,15 @@ class Client{
     return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).map(v=>new User(v,this))
   }
 
-  uploadMedia({fileName,blob}={}){
+  uploadMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
     })
-    let file
-    if(fileName)file = DriveApp.getFilesByName(fileName).next()
+    
     const data = Utilities.newBlob(
-      (file?.getBlob() || blob).getBytes(),
-      file?.getMimeType() || blob?.getContentType(),
-      (file || blob).getName()
+      blob.getBytes(),
+      blob.getContentType(),
+      blob.getName()
     )
     
     return this.fetch("https://upload.twitter.com/1.1/media/upload.json",{
@@ -329,27 +328,24 @@ class Client{
     })
   }
 
-  uploadBigMedia({fileName,blob}={}){
+  uploadBigMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
     })
-    if(!fileName&&!blob)throw new Error("fileNameかblobは必須です")
-    let file
-    if(fileName)file=fileName?DriveApp.getFilesByName(fileName).next():null
     const url="https://upload.twitter.com/1.1/media/upload.json"
-    const name=blob?.getName()||file.getName()
-    const mimeType=blob?.getContentType()||file.getMimeType()
+    const name=blob.getName()
+    const mimeType=blob.getContentType()
     const {media_id_string}=this.fetch(url,{
       method:"POST",
       contentType:"application/x-www-form-urlencoded",
       payload:{
         command:"INIT",
-        total_bytes:(blob?.getBytes()?.length||file.getSize())+"",
+        total_bytes:blob?.getBytes().length+"",
         media_type:mimeType,
       }
     })
 
-    let mediaData=blob?.getBytes()||file.getBlob().getBytes()
+    let mediaData=blob.getBytes()
     let segmentSize=5*1000*1000
     for(let i=0;i<Math.ceil(mediaData.length/segmentSize);i++){
       const blob = Utilities.newBlob(
