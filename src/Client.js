@@ -32,22 +32,26 @@ class Client{
     this.restTime=restTime
     if(id)this.user=new ClientUser(id,this)
   }
-
-  setId(id){
-    this.user=new ClientUser(id,this)
-    return this
-  }
-
-  validate({scope,oauthVersion}={}){
+  /**
+   * clientにそのスコープやバージョンが含まれているか検証します
+   * @param {string[]} oauthVersion
+   * @param {string[]} scope 
+   */
+  validate(oauthVersion,scope){
     if(!oauthVersion.includes(this.oauthVersion))throw new Error(`${oauthVersion.join()}のみで使用可能です`)
     if(this.oauthVersion==="2.0"&&scope.length)scope.forEach(s=>{
       if(!this.scope?.includes(s))throw new Error(`${scope.filter(s=>!this.scope.includes(s))}スコープが不足しています`)
     })
   }
- 
-  authorize({scopes=TWITTER_API_DATA.scopes}={}){
+
+  /**
+   * 認証URLを発行します
+   * @param {string[]} scopes 2.0の場合はスコープを指定します  
+   * @returns {string} 認証URLです
+   */
+  authorize(scopes=TWITTER_API_DATA.scopes){
     if(this.oauthVersion==="2.0"){
-      const code_verifier=Client.makeNonce(32)
+      const code_verifier=Util.makeNonce(32)
       const challenge=Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,code_verifier,Utilities.Charset.US_ASCII)).replace(/=/g,"")
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
@@ -58,7 +62,7 @@ class Client{
         scope:scopes,
         code_verifier,
       })
-      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Util.parcentEncode(Client.getCallBackURL())}&scope=${scopes.join("+")}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`
+      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Util.parcentEncode(Util.getCallBackURL())}&scope=${scopes.join("+")}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`
     }else{
       const state=ScriptApp.newStateToken()
         .withTimeout(3600)
@@ -71,7 +75,7 @@ class Client{
         method:"POST",
         contentType:"application/x-www-form-urlencoded",
         payload:{
-          oauth_callback:Client.getCallBackURL()+"?state="+state
+          oauth_callback:Util.getCallBackURL()+"?state="+state
         }
       })
       this.property.setProperty("oauth_token_secret",oauth_token_secret)
@@ -97,7 +101,10 @@ class Client{
   }
 
   
-
+  /**
+   * doGetイベントの引数からclientを作成します
+   * @returns {Client}
+   */
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
     return new Client({
       name:e.parameter.name,
@@ -108,7 +115,11 @@ class Client{
       CLIENT_SECRET
     })
   }
- 
+  /**
+   * doGetイベントの引数から正常に認証がされているかを判別します
+   * @param {Object} e doGetイベントの引数です 
+   * @returns {boolean}
+   */
   isAuthorized(e){
     if(e.parameter.error)return false
     if(this.oauthVersion==="2.0"){
@@ -122,7 +133,7 @@ class Client{
           grant_type:"authorization_code",
           code,
           code_verifier,
-          redirect_uri:Client.getCallBackURL()
+          redirect_uri:Util.getCallBackURL()
         }
       }))
       this.property.setProperties({
@@ -133,7 +144,7 @@ class Client{
       return true
     }
     let {oauth_verifier,oauth_token}=e.parameter
-    let response=Client.parseParam(UrlFetchApp.fetch("https://api.twitter.com/oauth/access_token",{
+    let response=Util.parseParam(UrlFetchApp.fetch("https://api.twitter.com/oauth/access_token",{
       method:"POST",
       payload:{
         oauth_consumer_key:this.apiKey,
@@ -150,7 +161,10 @@ class Client{
     })
     return true
   }
- 
+  /**
+   * 2.0専用です。
+   * トークンをリフレッシュします
+   */
   refresh(){
     this.validate({
       scope:["offline.access"],
@@ -175,13 +189,20 @@ class Client{
       access_token:this.accessToken
     })
   }
-
+  /**
+   * 与えられたnamesに紐づけられているアカウントをリフレッシュします
+   */
   static refreshAll({CLIENT_ID,CLIENT_SECRET,names}={}){
     names.forEach((name)=>{
       new Client({CLIENT_ID,CLIENT_SECRET,name}).refresh()
     })
   }
-
+  /**
+   * 適切な認証情報を載せてfetchします
+   * @param {string} url 
+   * @param {Object} options 
+   * @returns {Object}
+   */
   fetch(url,options){
     if(this.oauthVersion==="2.0"){
       options.method=options.method?.toUpperCase()||"GET"
@@ -190,7 +211,7 @@ class Client{
       if (!options.headers.Authorization) options.headers.Authorization = "Bearer " + this.accessToken
       if (options.method==="POST"&&!options.contentType) throw new Error("contentTypeは必須です")
       if ((options.method === "GET") && options.queryParameters) {
-        let uriOption=Client.buildParam(options.queryParameters)
+        let uriOption=Util.buildParam(options.queryParameters)
         if(uriOption)url += "?" + uriOption
         delete options.queryParameters
       }
@@ -203,20 +224,20 @@ class Client{
       if(this.oauthToken)options.oauthParameters.oauth_token=this.oauthToken
       if(options.method==="POST"&&!options.contentType)throw new Error("contentTypeは必須です")
       if ((options.method === "GET" || options.method === "get") && options.queryParameters) {
-        let uriOption = Client.buildParam(options.queryParameters)
+        let uriOption = Util.buildParam(options.queryParameters)
         if(uriOption)url += "?" + uriOption
         delete options.queryParameters
       }
       const oauthOptions={
         ...options.oauthParameters,
         oauth_consumer_key:this.apiKey,
-        oauth_nonce:Client.makeNonce(),
+        oauth_nonce:Util.makeNonce(),
         oauth_signature_method:"HMAC-SHA1",
         oauth_timestamp:Math.floor(Date.now()/1000)+"",
         oauth_version:"1.0"
       }
       if(options.contentType==="application/x-www-form-urlencoded"&&options.payload){
-        url+=(url.includes("?")?"&":"?")+Client.buildParam(options.payload)
+        url+=(url.includes("?")?"&":"?")+Util.buildParam(options.payload)
         oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
         options.payload=url.split("?")[1]
         url=url.split("?")[0]
@@ -235,78 +256,106 @@ class Client{
       let response=UrlFetchApp.fetch(url,options)
       switch(response.getHeaders()["Content-Type"].split(";")[0]){
         case "application/json":return JSON.parse(response);break
-        case "text/html":return Client.parseParam(response.getContentText());break
+        case "text/html":return Util.parseParam(response.getContentText());break
         default:return response
       }
     }
   }
-
+  /**
+   * 過去に認証がされたを返します
+   * @returns {boolean}
+   */
   hasAuthorized(){
     if(this.oauthVersion==="2.0")return !!this.accessToken
     return !!this.oauthToken
   }
-
-  getTweets(queryParameters){
+  /**
+   * ツイートを検索します。
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+   * https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
+  serchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
-      this.validate({
-        oauthVersion:["2.0"],
-        scope:["tweet.read","users.read"]
-      })
+      this.validate(["2.0"],["tweet.read","users.read"])
       let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters: queryParameters || Tweet.defaultQueryParameters,
+        queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
       })
-      return new WithMetaArray(response)
+      return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this)),meta:response.meta})
     }
     let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
-    response.statuses=response.statuses.map(v=>new Tweet(v,this))
-    return response
+    return response.statuses.map(v=>new Tweet(v,this))
   }
-
+  /**
+   * idで指定したツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
+   * @param {string} id 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetById(id,queryParameters){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","users.read"]
-    })
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=new Tweet(response.data,this)
-    return response
+    return new Tweet(Util.margeMeta(response))
   }
-
+  /**
+   * urlで指定したツイートを取得します
+   * @param {string} url 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetByURL(url,queryParameters){
     return this.getTweetById(url.split("?")[0].split("/")[5],queryParameters)
   }
-
+  /**
+   * ツイートを投稿します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
+   * @param {Object} payload 
+   * @returns {ClientTweet}
+   */
   postTweet(payload){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","tweet.write","users.read"]
-    })
+    this.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     const option = {
       contentType:"application/json",
       method: "POST",
       payload: JSON.stringify(payload)
     }
     let response = this.fetch("https://api.twitter.com/2/tweets", option)
-    return new Tweet(response.data, this)
+    return new ClientTweet(response.data, this)
   }
-
+  /**
+   * ユーザーネームからユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+   * @param {string} username 
+   * @param {Object} queryParameters 
+   * @returns {User}
+   */
   getUserByUsername(username,queryParameters){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","users.read"]
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new User(this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters}).data,this)
+    return new User(Util.margeMeta(response))
   }
-  
-  getUsers(queryParameters){
-    this.validate({
-      oauthVersion:["1.0a"],
-    })
-    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).map(v=>new User(v,this))
+  /**
+   * ユーザーを検索します
+   * https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  searchUsers(queryParameters){
+    this.validate(["1.0a"])
+    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).statuses.map(v=>new User(v,this))
   }
-
+  /**
+   * 5MB未満のメディアをアップロードします
+   * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
+   * @param {Blob} blob 
+   * @returns {Object}
+   */
   uploadMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
@@ -327,7 +376,12 @@ class Client{
       muteHttpExceptions:true
     })
   }
-
+  /**
+   * 5MB以上のメディアをアップロードします
+   * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload-init
+   * @param {Blob} blob 
+   * @returns {Object}
+   */
   uploadBigMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
@@ -374,7 +428,11 @@ class Client{
       }
     })
   }
-
+  /**
+   * 認証済みユーザーを取得します
+   * @param {Propeties} property 
+   * @returns {string[][]} 0番目は1.0aの認証済みユーザー、1番目は2.0の認証済みユーザーです
+   */
   static getAuthorizedUsers(property=PropertiesService.getUserProperties()){
     let data=property.getKeys().filter(v=>v.startsWith("Twittergs_")).map(v=>v.split("_")).map(([_,version,...n])=>({version,n:n.join("_")}))
     return [
@@ -391,46 +449,74 @@ class AppOnlyClient{
     if(!BEARER_TOKEN)throw new Error("BEARER_TOKENは必須です")
     this.bearerToken=BEARER_TOKEN
   }
+  /**
+   * 認証情報を載せてfetchします
+   * @param {string} url 
+   * @param {Object} options 
+   * @returns {Object}
+   */
   fetch(url,options){
     options=options||{}
     options.headers=options.headers||{"Authorization":"Bearer "+this.bearerToken}
     if(options.queryParameters){
-      let uriOption=[]
-      for(const key in options.queryParameters){
-        let value=options.queryParameters[key]
-        if(Array.isArray(value))value=value.join(",")
-        uriOption.push(`${key}=${Util.parcentEncode(value)}`)
-      }
-      url+="?"+uriOption.join("&")
+      url+=(url.includes("?")?"":"?")+Util.buildParam(options.queryParameters)
       delete options.queryParameters
     }
     return JSON.parse(UrlFetchApp.fetch(url,options))
   }
-
+  /**
+   * @param {Client} client 
+   * @returns 
+   */
   setClient(client){
     this.client=client
     return this
   }
-
-  getTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
-    response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
+  /**
+   * ツイートを検索します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
+  serchTweets(queryParameters){
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
+    })
+    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
   }
-
+  /**
+   * IDでツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
+   * @param {string} id 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetById(id,queryParameters){
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=new Tweet(response.data,this.client)
-    return response
+    return new Tweet(Util.margeMeta(response),this.client)
   }
 
-  getUserByUsername(username,options){
-    if(this.client)return new User(this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,options).data,this.client)
-    return this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,options)
+  /**
+   * ユーザーネームからユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+   * @param {string} username 
+   * @param {Object} queryParameters
+   * @returns {Tweet}
+   */
+  getUserByUsername(username,queryParameters){
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return new Tweet(Util.margeMeta(response),this.client)
   }
-
+  /**
+   * Bearerトークンを取得します
+   * @param {string} apiKey 
+   * @param {strnig} apiSecret 
+   * @returns 
+   */
   static getBearerToken(apiKey=PropertiesService.getUserProperties().getProperty("API_KEY"),apiSecret=PropertiesService.getUserProperties().getProperty("API_SECRET")){
     return JSON.parse(UrlFetchApp.fetch("https://api.twitter.com/oauth2/token",{    
       method: "POST",

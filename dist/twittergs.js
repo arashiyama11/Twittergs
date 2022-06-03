@@ -1,5 +1,4 @@
-function Twittergs(){
-  class Client{
+class Client{
   constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
     if(!name)throw new Error("nameは必須です")
@@ -33,22 +32,26 @@ function Twittergs(){
     this.restTime=restTime
     if(id)this.user=new ClientUser(id,this)
   }
-
-  setId(id){
-    this.user=new ClientUser(id,this)
-    return this
-  }
-
-  validate({scope,oauthVersion}={}){
+  /**
+   * clientにそのスコープやバージョンが含まれているか検証します
+   * @param {string[]} oauthVersion
+   * @param {string[]} scope 
+   */
+  validate(oauthVersion,scope){
     if(!oauthVersion.includes(this.oauthVersion))throw new Error(`${oauthVersion.join()}のみで使用可能です`)
     if(this.oauthVersion==="2.0"&&scope.length)scope.forEach(s=>{
       if(!this.scope?.includes(s))throw new Error(`${scope.filter(s=>!this.scope.includes(s))}スコープが不足しています`)
     })
   }
- 
-  authorize({scopes=TWITTER_API_DATA.scopes}={}){
+
+  /**
+   * 認証URLを発行します
+   * @param {string[]} scopes 2.0の場合はスコープを指定します  
+   * @returns {string} 認証URLです
+   */
+  authorize(scopes=TWITTER_API_DATA.scopes){
     if(this.oauthVersion==="2.0"){
-      const code_verifier=Client.makeNonce(32)
+      const code_verifier=Util.makeNonce(32)
       const challenge=Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,code_verifier,Utilities.Charset.US_ASCII)).replace(/=/g,"")
       const state=ScriptApp.newStateToken()
         .withMethod("authCallBack")
@@ -59,7 +62,7 @@ function Twittergs(){
         scope:scopes,
         code_verifier,
       })
-      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Util.parcentEncode(Client.getCallBackURL())}&scope=${scopes.join("+")}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`
+      return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${Util.parcentEncode(Util.getCallBackURL())}&scope=${scopes.join("+")}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`
     }else{
       const state=ScriptApp.newStateToken()
         .withTimeout(3600)
@@ -72,7 +75,7 @@ function Twittergs(){
         method:"POST",
         contentType:"application/x-www-form-urlencoded",
         payload:{
-          oauth_callback:Client.getCallBackURL()+"?state="+state
+          oauth_callback:Util.getCallBackURL()+"?state="+state
         }
       })
       this.property.setProperty("oauth_token_secret",oauth_token_secret)
@@ -80,11 +83,6 @@ function Twittergs(){
     }
   }
 
-  static makeNonce(size=32){
-    const chars="ABCDEFGHIDKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz1234567890"
-    return Array(size).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join("")
-  }
-  
   _makeSignature({method,url,oauthParams}={}){
     let params=[]
     if(url.includes("?")){
@@ -102,12 +100,11 @@ function Twittergs(){
     return Utilities.base64Encode(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_1,base,signing))
   }
 
-  static fixedEncodeURIComponent(str) {
-    return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
-      return '%' + c.charCodeAt(0).toString(16)
-    })
-  }
-
+  
+  /**
+   * doGetイベントの引数からclientを作成します
+   * @returns {Client}
+   */
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
     return new Client({
       name:e.parameter.name,
@@ -118,7 +115,11 @@ function Twittergs(){
       CLIENT_SECRET
     })
   }
- 
+  /**
+   * doGetイベントの引数から正常に認証がされているかを判別します
+   * @param {Object} e doGetイベントの引数です 
+   * @returns {boolean}
+   */
   isAuthorized(e){
     if(e.parameter.error)return false
     if(this.oauthVersion==="2.0"){
@@ -132,7 +133,7 @@ function Twittergs(){
           grant_type:"authorization_code",
           code,
           code_verifier,
-          redirect_uri:Client.getCallBackURL()
+          redirect_uri:Util.getCallBackURL()
         }
       }))
       this.property.setProperties({
@@ -143,7 +144,7 @@ function Twittergs(){
       return true
     }
     let {oauth_verifier,oauth_token}=e.parameter
-    let response=Client.parseParam(UrlFetchApp.fetch("https://api.twitter.com/oauth/access_token",{
+    let response=Util.parseParam(UrlFetchApp.fetch("https://api.twitter.com/oauth/access_token",{
       method:"POST",
       payload:{
         oauth_consumer_key:this.apiKey,
@@ -160,7 +161,10 @@ function Twittergs(){
     })
     return true
   }
- 
+  /**
+   * 2.0専用です。
+   * トークンをリフレッシュします
+   */
   refresh(){
     this.validate({
       scope:["offline.access"],
@@ -185,17 +189,20 @@ function Twittergs(){
       access_token:this.accessToken
     })
   }
-
+  /**
+   * 与えられたnamesに紐づけられているアカウントをリフレッシュします
+   */
   static refreshAll({CLIENT_ID,CLIENT_SECRET,names}={}){
     names.forEach((name)=>{
       new Client({CLIENT_ID,CLIENT_SECRET,name}).refresh()
     })
   }
-
-  static getCallBackURL(){
-    return `https://script.google.com/macros/d/${ScriptApp.getScriptId()}/usercallback`
-  }
-
+  /**
+   * 適切な認証情報を載せてfetchします
+   * @param {string} url 
+   * @param {Object} options 
+   * @returns {Object}
+   */
   fetch(url,options){
     if(this.oauthVersion==="2.0"){
       options.method=options.method?.toUpperCase()||"GET"
@@ -204,7 +211,7 @@ function Twittergs(){
       if (!options.headers.Authorization) options.headers.Authorization = "Bearer " + this.accessToken
       if (options.method==="POST"&&!options.contentType) throw new Error("contentTypeは必須です")
       if ((options.method === "GET") && options.queryParameters) {
-        let uriOption=Client.buildParam(options.queryParameters)
+        let uriOption=Util.buildParam(options.queryParameters)
         if(uriOption)url += "?" + uriOption
         delete options.queryParameters
       }
@@ -217,20 +224,20 @@ function Twittergs(){
       if(this.oauthToken)options.oauthParameters.oauth_token=this.oauthToken
       if(options.method==="POST"&&!options.contentType)throw new Error("contentTypeは必須です")
       if ((options.method === "GET" || options.method === "get") && options.queryParameters) {
-        let uriOption = Client.buildParam(options.queryParameters)
+        let uriOption = Util.buildParam(options.queryParameters)
         if(uriOption)url += "?" + uriOption
         delete options.queryParameters
       }
       const oauthOptions={
         ...options.oauthParameters,
         oauth_consumer_key:this.apiKey,
-        oauth_nonce:Client.makeNonce(),
+        oauth_nonce:Util.makeNonce(),
         oauth_signature_method:"HMAC-SHA1",
         oauth_timestamp:Math.floor(Date.now()/1000)+"",
         oauth_version:"1.0"
       }
       if(options.contentType==="application/x-www-form-urlencoded"&&options.payload){
-        url+=(url.includes("?")?"&":"?")+Client.buildParam(options.payload)
+        url+=(url.includes("?")?"&":"?")+Util.buildParam(options.payload)
         oauthOptions.oauth_signature=this._makeSignature({method:options.method,url,oauthParams:oauthOptions})
         options.payload=url.split("?")[1]
         url=url.split("?")[0]
@@ -249,105 +256,115 @@ function Twittergs(){
       let response=UrlFetchApp.fetch(url,options)
       switch(response.getHeaders()["Content-Type"].split(";")[0]){
         case "application/json":return JSON.parse(response);break
-        case "text/html":return Client.parseParam(response.getContentText());break
+        case "text/html":return Util.parseParam(response.getContentText());break
         default:return response
       }
     }
   }
-
-  static buildParam(obj){
-    let result=[]
-    for(const key in obj){
-      const value=Array.isArray(obj[key])?obj[key].join():obj[key]
-      result.push(Util.parcentEncode(key)+"="+Util.parcentEncode(value))
-    }
-    return result.join("&")
-  }
-
-  static parseParam(str){
-    if(str.includes("?"))str=str.split("?")[1]
-    let params=str.split("&").map(v=>v.split("=").map(decodeURIComponent))
-    const obj={}
-    params.forEach(([key,value])=>obj[key]=value)
-    return obj
-  }
-  
+  /**
+   * 過去に認証がされたを返します
+   * @returns {boolean}
+   */
   hasAuthorized(){
     if(this.oauthVersion==="2.0")return !!this.accessToken
     return !!this.oauthToken
   }
-
-  getTweets(queryParameters){
+  /**
+   * ツイートを検索します。
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+   * https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
+  serchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
-      this.validate({
-        oauthVersion:["2.0"],
-        scope:["tweet.read","users.read"]
-      })
+      this.validate(["2.0"],["tweet.read","users.read"])
       let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters: queryParameters || Tweet.defaultQueryParameters,
+        queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
       })
-      return new WithMetaArray(response)
+      return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this)),meta:response.meta})
     }
     let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
-    response.statuses=response.statuses.map(v=>new Tweet(v,this))
-    return response
+    return response.statuses.map(v=>new Tweet(v,this))
   }
-
+  /**
+   * idで指定したツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
+   * @param {string} id 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetById(id,queryParameters){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","users.read"]
-    })
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=new Tweet(response.data,this)
-    return response
+    return new Tweet(Util.margeMeta(response))
   }
-
+  /**
+   * urlで指定したツイートを取得します
+   * @param {string} url 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetByURL(url,queryParameters){
     return this.getTweetById(url.split("?")[0].split("/")[5],queryParameters)
   }
-
+  /**
+   * ツイートを投稿します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
+   * @param {Object} payload 
+   * @returns {ClientTweet}
+   */
   postTweet(payload){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","tweet.write","users.read"]
-    })
+    this.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     const option = {
       contentType:"application/json",
       method: "POST",
       payload: JSON.stringify(payload)
     }
     let response = this.fetch("https://api.twitter.com/2/tweets", option)
-    return new Tweet(response.data, this)
+    return new ClientTweet(response.data, this)
   }
-
+  /**
+   * ユーザーネームからユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+   * @param {string} username 
+   * @param {Object} queryParameters 
+   * @returns {User}
+   */
   getUserByUsername(username,queryParameters){
-    this.validate({
-      oauthVersion:["1.0a","2.0"],
-      scope:["tweet.read","users.read"]
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new User(this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters}).data,this)
+    return new User(Util.margeMeta(response))
   }
-  
-  getUsers(queryParameters){
-    this.validate({
-      oauthVersion:["1.0a"],
-    })
-    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).map(v=>new User(v,this))
+  /**
+   * ユーザーを検索します
+   * https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  searchUsers(queryParameters){
+    this.validate(["1.0a"])
+    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).statuses.map(v=>new User(v,this))
   }
-
-  uploadMedia({fileName,blob}={}){
+  /**
+   * 5MB未満のメディアをアップロードします
+   * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
+   * @param {Blob} blob 
+   * @returns {Object}
+   */
+  uploadMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
     })
-    let file
-    if(fileName)file = DriveApp.getFilesByName(fileName).next()
+    
     const data = Utilities.newBlob(
-      (file?.getBlob() || blob).getBytes(),
-      file?.getMimeType() || blob?.getContentType(),
-      (file || blob).getName()
+      blob.getBytes(),
+      blob.getContentType(),
+      blob.getName()
     )
     
     return this.fetch("https://upload.twitter.com/1.1/media/upload.json",{
@@ -359,28 +376,30 @@ function Twittergs(){
       muteHttpExceptions:true
     })
   }
-
-  uploadBigMedia({fileName,blob}={}){
+  /**
+   * 5MB以上のメディアをアップロードします
+   * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload-init
+   * @param {Blob} blob 
+   * @returns {Object}
+   */
+  uploadBigMedia(blob){
     this.validate({
       oauthVersion:["1.0a"]
     })
-    if(!fileName&&!blob)throw new Error("fileNameかblobは必須です")
-    let file
-    if(fileName)file=fileName?DriveApp.getFilesByName(fileName).next():null
     const url="https://upload.twitter.com/1.1/media/upload.json"
-    const name=blob?.getName()||file.getName()
-    const mimeType=blob?.getContentType()||file.getMimeType()
+    const name=blob.getName()
+    const mimeType=blob.getContentType()
     const {media_id_string}=this.fetch(url,{
       method:"POST",
       contentType:"application/x-www-form-urlencoded",
       payload:{
         command:"INIT",
-        total_bytes:(blob?.getBytes()?.length||file.getSize())+"",
+        total_bytes:blob?.getBytes().length+"",
         media_type:mimeType,
       }
     })
 
-    let mediaData=blob?.getBytes()||file.getBlob().getBytes()
+    let mediaData=blob.getBytes()
     let segmentSize=5*1000*1000
     for(let i=0;i<Math.ceil(mediaData.length/segmentSize);i++){
       const blob = Utilities.newBlob(
@@ -409,7 +428,11 @@ function Twittergs(){
       }
     })
   }
-
+  /**
+   * 認証済みユーザーを取得します
+   * @param {Propeties} property 
+   * @returns {string[][]} 0番目は1.0aの認証済みユーザー、1番目は2.0の認証済みユーザーです
+   */
   static getAuthorizedUsers(property=PropertiesService.getUserProperties()){
     let data=property.getKeys().filter(v=>v.startsWith("Twittergs_")).map(v=>v.split("_")).map(([_,version,...n])=>({version,n:n.join("_")}))
     return [
@@ -420,51 +443,80 @@ function Twittergs(){
 }
 
 
+
 class AppOnlyClient{
   constructor(BEARER_TOKEN=PropertiesService.getUserProperties().getProperty("BEARER_TOKEN")){
     if(!BEARER_TOKEN)throw new Error("BEARER_TOKENは必須です")
     this.bearerToken=BEARER_TOKEN
   }
+  /**
+   * 認証情報を載せてfetchします
+   * @param {string} url 
+   * @param {Object} options 
+   * @returns {Object}
+   */
   fetch(url,options){
     options=options||{}
     options.headers=options.headers||{"Authorization":"Bearer "+this.bearerToken}
     if(options.queryParameters){
-      let uriOption=[]
-      for(const key in options.queryParameters){
-        let value=options.queryParameters[key]
-        if(Array.isArray(value))value=value.join(",")
-        uriOption.push(`${key}=${Util.parcentEncode(value)}`)
-      }
-      url+="?"+uriOption.join("&")
+      url+=(url.includes("?")?"":"?")+Util.buildParam(options.queryParameters)
       delete options.queryParameters
     }
     return JSON.parse(UrlFetchApp.fetch(url,options))
   }
-
+  /**
+   * @param {Client} client 
+   * @returns 
+   */
   setClient(client){
     this.client=client
     return this
   }
-
-  getTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
-    response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
+  /**
+   * ツイートを検索します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
+  serchTweets(queryParameters){
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
+    })
+    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
   }
-
+  /**
+   * IDでツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
+   * @param {string} id 
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   getTweetById(id,queryParameters){
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=new Tweet(response.data,this.client)
-    return response
+    return new Tweet(Util.margeMeta(response),this.client)
   }
 
-  getUserByUsername(username,options){
-    if(this.client)return new User(this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,options).data,this.client)
-    return this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,options)
+  /**
+   * ユーザーネームからユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+   * @param {string} username 
+   * @param {Object} queryParameters
+   * @returns {Tweet}
+   */
+  getUserByUsername(username,queryParameters){
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return new Tweet(Util.margeMeta(response),this.client)
   }
-
+  /**
+   * Bearerトークンを取得します
+   * @param {string} apiKey 
+   * @param {strnig} apiSecret 
+   * @returns 
+   */
   static getBearerToken(apiKey=PropertiesService.getUserProperties().getProperty("API_KEY"),apiSecret=PropertiesService.getUserProperties().getProperty("API_SECRET")){
     return JSON.parse(UrlFetchApp.fetch("https://api.twitter.com/oauth2/token",{    
       method: "POST",
@@ -477,22 +529,31 @@ class AppOnlyClient{
       }
     })).access_token
   }
-}class Tweet{
+}
+class Tweet{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
     if(this.author_id)this.author=new User(this.author_id,client)
     this.__proto__.client=client
   }
-
+  /**
+   * ツイートの情報をアップデートします
+   * @param {Object} queryParameters 
+   * @returns {Tweet}
+   */
   update(queryParameters){
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
-      queryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
     Object.assign(this,result)
     return this
   }
-
+  /**
+   * ツイートにリプライします
+   * @param {Object} payload 
+   * @returns {ClientTweet}
+   */
   reply(payload){
     payload={
       ...payload,
@@ -503,25 +564,43 @@ class AppOnlyClient{
     return this.client.postTweet(payload)
   }
 
-  
+  /**
+   * いいねしたユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getLiked(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
-    if(response.data)response.data=response.data.map(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
-
+  /**
+   * リツイートしたユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getRetweeted(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
-    if(response.data)response.data=response.data.map(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new User(v,this.client))})
   }
-
+  /**
+   * 引用リツイートを取得します
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
   getQuoteTweets(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters:queryParameters||Tweet.defaultQueryParameters})
-    if(response.data)response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
+    })
+    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
   }
-
+  /**
+   * ツイートにいいねします
+   * @returns {Object}
+   */
   like(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes`,{
       method:"POST",
@@ -530,11 +609,18 @@ class AppOnlyClient{
       })
     })
   }
-
+  /**
+   * いいねを取り消します
+   * @returns {Object}
+   */
   deleteLike(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes/${this.id}`,{method:"DELETE"})
   }
 
+  /**
+   * ツイートをリツイートします
+   * @returns {Object}
+   */
   retweet(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets`,{
       method:"POST",
@@ -543,100 +629,86 @@ class AppOnlyClient{
       })
     })
   }
-
+  /**
+   * リツイートを取り消します
+   * @returns {Object}
+   */
   deleteRetweet(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
-  }
-
-  static get allQueryParameters(){
-    return{
-      expansions:Tweet.expansions,
-      "media.fields":Tweet.mediaFields,
-      "place.fields":Tweet.placeFields,
-      "poll.fields":Tweet.pollFields,
-      "tweet.fields":Tweet.tweetFields,
-      "user.fields":Tweet.userFields
-    }
-  }
-
-  static get defaultQueryParameters(){
-    return {
-      expansions:["author_id","in_reply_to_user_id","referenced_tweets.id"],
-    }
-  }
-
-  static get expansions(){
-    return ["attachments.poll_ids","attachments.media_keys","author_id","entities.mentions.username","geo.place_id", "in_reply_to_user_id","referenced_tweets.id","referenced_tweets.id.author_id"]
-  }
-
-  static get mediaFields(){
-    return["duration_ms","height","media_key", "preview_image_url","type","url","width","public_metrics","non_public_metrics","organic_metrics","promoted_metrics","alt_text"]
-  }
-
-  static get placeFields(){
-    return["contained_within","country","country_code", "full_name", "geo", "id", "name", "place_type"]
-  }
-
-  static get pollFields(){
-    return["duration_minutes","end_datetime","id","options","voting_status"]
-  }
-
-  static get tweetFields(){
-    return["attachments","author_id","context_annotations","conversation_id","created_at","entities","geo","id, in_reply_to_user_id", "lang","non_public_metrics","public_metrics","organic_metrics","promoted_metrics","possibly_sensitive","referenced_tweets","reply_settings","source","text", "withheld"]
-  }
-
-  static get userFields(){
-    return["created_at","description","entities","id","location","name","pinned_tweet_id","profile_image_url","protected","public_metrics","url","username","verified","withheld"]
   }
 
 }
 
 
 class ClientTweet extends Tweet{
+  /**
+   * ツイートを削除します
+   * @returns {Object}
+   */
   delete(){
     return this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}`,{
       method:"DELETE",
     })
   }
-}class User{
+}
+class User{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
     this.__proto__.client=client
   }
-  
+  /**
+   * ユーザーをアップデートします
+   * @param {Object} queryParameters 
+   * @returns {User}
+   */
   update(queryParameters){
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{
-      queryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
     Object.assign(this,response)
     return this
   }
-
+  /**
+   * ユーザーがいいねしたツイートを取得します
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
   getLiking(queryParameters){
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
+    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
   }
 
-
+  /**
+   * ユーザーのタイムラインを取得します
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
   getTimeLine(queryParameters){
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
-  }
-  getMentioned(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
-      queryParameters:queryParameters||Tweet.defaultQueryParameters
-    })
-    response.data=response.data.map(v=>new Tweet(v,this.client))
-    return response
+    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
   }
 
+  /**
+   * メンション付きのツイートを取得します
+   * @param {Object} queryParameters 
+   * @returns {Tweet[]}
+   */
+  getMentioned(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
+    })
+    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+  }
+
+  /**
+   * ユーザーをフォローします
+   * @returns {Object}
+   */
   follow(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/following`,{
       method:"POST",
@@ -646,78 +718,131 @@ class ClientTweet extends Tweet{
     })
   }
 
+  /**
+   * フォローを解除します
+   * @returns {Object}
+   */
   unfollow(){
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/following/${this.id}`,{method:"DELETE"})
   }
 
+  /**
+   * ユーザーがフォローしているユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getFollowing(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{queryParameters})
-    response.data=response.data.map(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
 
+  /**
+   * ユーザーをフォローしているユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getFollowers(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{queryParameters})
-    response.data=response.data.map(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
-  
 }
 
 class ClientUser extends User{
+  /**
+   * ブロックしているユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getBlocking(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{queryParameters})
-    response.data=response.data.map(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
 
+  /**
+   * ユーザーがミュートしているユーザーを取得します
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
   getMuting(queryParameters){
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{queryParameters})
-    response.data=response.data.mao(v=>new User(v,this.client))
-    return response
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
-}const TWITTER_API_DATA={
-  scopes:[
-    "tweet.read",
-    "tweet.write",
-    "tweet.moderate.write",
-    "users.read",
-    "follows.read",
-    "follows.write",
-    "offline.access",
-    "space.read",
-    "mute.read",
-    "mute.write",
-    "like.read",
-    "like.write",
-    "list.read",
-    "list.write",
-    "block.read",
-    "block.write",
-    "bookmark.read",
-    "bookmark.write"
+}
+const TWITTER_API_DATA={
+  scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],
   queryParameters:{
     tweet:{
-      expansions:[]
+      expansions:["attachments.poll_ids","attachments.media_keys","author_id","entities.mentions.username","geo.place_id", "in_reply_to_user_id","referenced_tweets.id","referenced_tweets.id.author_id"],
+      "media.fields":["duration_ms","height","media_key", "preview_image_url","type","url","width","public_metrics","non_public_metrics","organic_metrics","promoted_metrics","alt_text"],
+      "place.fields":["contained_within","country","country_code","full_name","geo","id","name","place_type"],
+      "poll.fields":["duration_minutes","end_datetime","id","options","voting_status"],
+      "tweet.fields":["attachments", "author_id", "context_annotations", "conversation_id", "created_at", "entities", "geo", "id", "in_reply_to_user_id", "lang","non_public_metrics", "public_metrics", "organic_metrics", "promoted_metrics", "possibly_sensitive", "referenced_tweets", "reply_settings", "source", "text", "withheld"],
+      "user.fields":["created_at", "description", "entities", "id", "location", "name", "pinned_tweet_id", "profile_image_url", "protected", "public_metrics", "url", "username", "verified", "withheld"]
     },
+    user:{
+      expansions:["pinned_tweet_id"],
+      "tweet.fields":["attachments", "author_id", "context_annotations", "conversation_id", "created_at", "entities", "geo", "id", "in_reply_to_user_id", "lang", "non_public_metrics", "public_metrics", "organic_metrics", "promoted_metrics", "possibly_sensitive", "referenced_tweets", "reply_settings", "source", "text", "withheld"],
+      "user.fields":["created_at", "description", "entities", "id", "location", "name", "pinned_tweet_id", "profile_image_url", "protected", "public_metrics", "url", "username", "verified", "withheld"]
+    }   
+  },
+  defaultQueryParameters:{
+    tweet:{expansions:["author_id"]},
     user:{}
   }
 }
 
 const Util={
-  parcentEncode(){},
-  makeNonce(){},
-  getCallBackUrl(){},
-  buildParam(){},
-  parseParam(){}
-}
-
-class WithMetaArray extends Array{
-  constructor({meta,data}={}){
-    super(...data,null)
-    this.pop()
-    this.meta=meta
+  /**
+   * @param {string} str 
+   * @returns {string}
+   */
+  parcentEncode(str){
+    return encodeURIComponent(str).replace(/[!'()*]/g,c=>`%${s.charCodeAt(0).toString()}`)
+  },
+  /**
+   * @param {number} size 
+   * @returns {string}
+   */
+  makeNonce(size=32){
+    const chars="ABCDEFGHIDKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz1234567890"
+    return Array(size).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join("")
+  },
+  /**
+   * 
+   * @returns {string}
+   */
+  getCallBackURL(){
+    return `https://script.google.com/macros/d/${ScriptApp.getScriptId()}/usercallback`
+  },
+  /**
+   * 
+   * @param {Object} obj 
+   * @returns {string}
+   */
+  buildParam(obj){
+    return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&")
+  },
+  /**
+   * 
+   * @param {string} str 
+   * @returns {Object}
+   */
+  parseParam(str){
+    if(str.includes("?"))str=str.split("?")[1]
+    return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
+  },
+  margeMeta({meta,data}={}){
+    data.meta=meta
+    return data
   }
 }
 
@@ -757,6 +882,4 @@ class Property{
   resetProperty(){
     this.property.setProperty(this.key,"{}")
   }
-}
-  return {Client,AppOnlyClient}
 }

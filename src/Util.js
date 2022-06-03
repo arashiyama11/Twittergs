@@ -1,23 +1,5 @@
 const TWITTER_API_DATA={
-  scopes:[
-    "tweet.read",
-    "tweet.write",
-    "tweet.moderate.write",
-    "users.read",
-    "follows.read",
-    "follows.write",
-    "offline.access",
-    "space.read",
-    "mute.read",
-    "mute.write",
-    "like.read",
-    "like.write",
-    "list.read",
-    "list.write",
-    "block.read",
-    "block.write",
-    "bookmark.read",
-    "bookmark.write"
+  scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],
   queryParameters:{
     tweet:{
@@ -33,34 +15,56 @@ const TWITTER_API_DATA={
       "tweet.fields":["attachments", "author_id", "context_annotations", "conversation_id", "created_at", "entities", "geo", "id", "in_reply_to_user_id", "lang", "non_public_metrics", "public_metrics", "organic_metrics", "promoted_metrics", "possibly_sensitive", "referenced_tweets", "reply_settings", "source", "text", "withheld"],
       "user.fields":["created_at", "description", "entities", "id", "location", "name", "pinned_tweet_id", "profile_image_url", "protected", "public_metrics", "url", "username", "verified", "withheld"]
     }   
+  },
+  defaultQueryParameters:{
+    tweet:{expansions:["author_id"]},
+    user:{}
   }
 }
 
 const Util={
+  /**
+   * @param {string} str 
+   * @returns {string}
+   */
   parcentEncode(str){
     return encodeURIComponent(str).replace(/[!'()*]/g,c=>`%${s.charCodeAt(0).toString()}`)
   },
+  /**
+   * @param {number} size 
+   * @returns {string}
+   */
   makeNonce(size=32){
     const chars="ABCDEFGHIDKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz1234567890"
     return Array(size).fill(0).map(()=>chars[Math.floor(Math.random()*chars.length)]).join("")
   },
-  getCallBackUrl(){
+  /**
+   * 
+   * @returns {string}
+   */
+  getCallBackURL(){
     return `https://script.google.com/macros/d/${ScriptApp.getScriptId()}/usercallback`
   },
+  /**
+   * 
+   * @param {Object} obj 
+   * @returns {string}
+   */
   buildParam(obj){
     return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&")
   },
+  /**
+   * 
+   * @param {string} str 
+   * @returns {Object}
+   */
   parseParam(str){
     if(str.includes("?"))str=str.split("?")[1]
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
-  }
-}
-
-class WithMetaArray extends Array{
-  constructor({meta,data}={}){
-    super(...data,null)
-    this.pop()
-    this.meta=meta
+  },
+  margeMeta({meta,data}={}){
+    data.meta=meta
+    return data
   }
 }
 
