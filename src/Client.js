@@ -152,7 +152,11 @@ class Client{
         oauth_verifier
       }
     }).getContentText())
-    const {oauth_token_secret,user_id}=response
+    const {oauth_token_secret,user_id,screen_name}=response
+    if(this.name==="@auto"){
+      this.name=screen_name
+      this.property=new Property(this.property.property,this)
+    }
     oauth_token=response.oauth_token
     this.property.setProperties({
       oauth_token,
