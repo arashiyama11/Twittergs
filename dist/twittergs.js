@@ -152,7 +152,11 @@ class Client{
         oauth_verifier
       }
     }).getContentText())
-    const {oauth_token_secret,user_id}=response
+    const {oauth_token_secret,user_id,screen_name}=response
+    if(this.name==="@auto"){
+      this.name=screen_name
+      this.property=new Property(this.property.property,this)
+    }
     oauth_token=response.oauth_token
     this.property.setProperties({
       oauth_token,
@@ -529,8 +533,7 @@ class AppOnlyClient{
       }
     })).access_token
   }
-}
-class Tweet{
+}class Tweet{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -669,8 +672,7 @@ class ClientTweet extends Tweet{
       method:"DELETE",
     })
   }
-}
-class User{
+}class User{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -814,8 +816,7 @@ class ClientUser extends User{
     })
     return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
-}
-const TWITTER_API_DATA={
+}const TWITTER_API_DATA={
   scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],
   queryParameters:{
