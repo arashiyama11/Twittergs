@@ -4,8 +4,7 @@
   "description": "",
   "scripts": {
     "auth": "clasp login --creds creds.json",
-    "latestLog": "node build/getLatestLog.js",
-    "build": "node build/build.js"
+    "build": "node build.js"
   },
   "keywords": [],
   "author": "arashiyama <arashiyama1120@gmail.com>",

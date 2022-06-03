@@ -1,8 +1,8 @@
 .clasp.json
 .clasprc.json
 .claspignore
-dev.js
 creds.json
 node_modules/
-build/
+dev.js
 test.js
+build.js
