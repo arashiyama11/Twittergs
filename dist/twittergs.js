@@ -539,10 +539,12 @@ class Tweet{
   }
   /**
    * ツイートの情報をアップデートします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
    * @param {Object} queryParameters 
    * @returns {Tweet}
    */
   update(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
@@ -551,10 +553,12 @@ class Tweet{
   }
   /**
    * ツイートにリプライします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
    * @param {Object} payload 
    * @returns {ClientTweet}
    */
   reply(payload){
+    this.client.validate(["1.0a","2.0",["tweet.read,","tweet.write","users.read"]])
     payload={
       ...payload,
       reply:{
@@ -566,10 +570,12 @@ class Tweet{
 
   /**
    * いいねしたユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getLiked(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -577,10 +583,12 @@ class Tweet{
   }
   /**
    * リツイートしたユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/get-tweets-id-retweeted_by
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getRetweeted(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -588,10 +596,12 @@ class Tweet{
   }
   /**
    * 引用リツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
   getQuoteTweets(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
@@ -599,9 +609,11 @@ class Tweet{
   }
   /**
    * ツイートにいいねします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/post-users-id-likes
    * @returns {Object}
    */
   like(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes`,{
       method:"POST",
       payload:JSON.stringify({
@@ -611,17 +623,21 @@ class Tweet{
   }
   /**
    * いいねを取り消します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/delete-users-id-likes-tweet_id
    * @returns {Object}
    */
   deleteLike(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes/${this.id}`,{method:"DELETE"})
   }
 
   /**
    * ツイートをリツイートします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/post-users-id-retweets
    * @returns {Object}
    */
   retweet(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets`,{
       method:"POST",
       payload:JSON.stringify({
@@ -631,21 +647,24 @@ class Tweet{
   }
   /**
    * リツイートを取り消します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/delete-users-id-retweets-tweet_id
    * @returns {Object}
    */
   deleteRetweet(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
   }
-
 }
 
 
 class ClientTweet extends Tweet{
   /**
    * ツイートを削除します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/delete-tweets-id
    * @returns {Object}
    */
   delete(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}`,{
       method:"DELETE",
     })
@@ -659,10 +678,12 @@ class User{
   }
   /**
    * ユーザーをアップデートします
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-id
    * @param {Object} queryParameters 
    * @returns {User}
    */
   update(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -671,10 +692,12 @@ class User{
   }
   /**
    * ユーザーがいいねしたツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-users-id-liked_tweets
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
   getLiking(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
@@ -683,10 +706,12 @@ class User{
 
   /**
    * ユーザーのタイムラインを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
   getTimeLine(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
@@ -695,10 +720,12 @@ class User{
 
   /**
    * メンション付きのツイートを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-mentions
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
   getMentioned(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
@@ -707,9 +734,11 @@ class User{
 
   /**
    * ユーザーをフォローします
+   * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/post-users-source_user_id-following
    * @returns {Object}
    */
   follow(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/following`,{
       method:"POST",
       payload:JSON.stringify({
@@ -720,18 +749,22 @@ class User{
 
   /**
    * フォローを解除します
+   * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/delete-users-source_id-following
    * @returns {Object}
    */
   unfollow(){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/following/${this.id}`,{method:"DELETE"})
   }
 
   /**
    * ユーザーがフォローしているユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getFollowing(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -740,10 +773,12 @@ class User{
 
   /**
    * ユーザーをフォローしているユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getFollowers(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -754,10 +789,12 @@ class User{
 class ClientUser extends User{
   /**
    * ブロックしているユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/get-users-blocking
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getBlocking(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","block.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
@@ -765,11 +802,13 @@ class ClientUser extends User{
   }
 
   /**
-   * ユーザーがミュートしているユーザーを取得します
+   * ミュートしているユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-users-muting
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
   getMuting(queryParameters){
+    this.client.validate(["1.0a","2.0"],["tweet.read","users.read","mute.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
