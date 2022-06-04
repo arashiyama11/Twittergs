@@ -71,7 +71,8 @@ class User{
       method:"POST",
       payload:JSON.stringify({
         target_user_id:this.id
-      })
+      }),
+      contentType:"application/json"
     })
   }
 

@@ -86,7 +86,8 @@ class Tweet{
       method:"POST",
       payload:JSON.stringify({
         tweet_id:this.id
-      })
+      }),
+      contentType:"application/json"
     })
   }
   /**
@@ -110,7 +111,8 @@ class Tweet{
       method:"POST",
       payload:JSON.stringify({
         tweet_id:this.id
-      })
+      }),
+      contenttype:"application/json"
     })
   }
   /**
