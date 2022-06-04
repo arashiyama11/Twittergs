@@ -29,13 +29,15 @@ client.getUserByUsername("sample").getFollowers()[0].follow()
 カジュアルな説明は[Qiita]()をどうぞ  
 まず、最初に以下のように環境変数を設定することを強くオススメします
 ```js
-PropertiesService.getUserProperties().setProperties({
-  CLIENT_ID:"<CLIENT_ID>",
-  CLIENT_SECRET:"<CLIENT_SECRET>",
-  API_KEY:"<API_KEY>",
-  API_SECRET:"<API_SECRET>",
-  BEARER_TOKEN:"<BEARER_TOKEN>"
-})
+function setEnv(){
+  PropertiesService.getUserProperties().setProperties({
+    CLIENT_ID:"<CLIENT_ID>",
+    CLIENT_SECRET:"<CLIENT_SECRET>",
+    API_KEY:"<API_KEY>",
+    API_SECRET:"<API_SECRET>",
+    BEARER_TOKEN:"<BEARER_TOKEN>"
+  })
+}
 ```
 こうすることで、Clientインスタンス作成時に毎回キーを記述しなくてもよくなります。
 
@@ -51,9 +53,9 @@ https://script.google.com/macros/d/スクリプトID/usercallback
 function authCallBack(e){
   const result=Client.fromCallBackEvent({e:e}).isAuthorized(e)
   if(result){
-    HtmlService.createHtmlOutput("成功")
+    return HtmlService.createHtmlOutput("成功")
   }else{
-    HtmlService.createHtmlOutput("失敗")
+    return HtmlService.createHtmlOutput("失敗")
   }
 }
 ```
@@ -69,9 +71,9 @@ function authCallBack(e){
     CLIENT_SECRET:"<CLIENT_SECRET>"
   }).isAuthorized(e)
   if(result){
-    HtmlService.createHtmlOutput("成功")
+    return HtmlService.createHtmlOutput("成功")
   }else{
-    HtmlService.createHtmlOutput("失敗")
+    return HtmlService.createHtmlOutput("失敗")
   }
 } 
 ```
