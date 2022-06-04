@@ -63,6 +63,7 @@ const Util={
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
   },
   margeMeta({meta,data}={}){
+    if(!data?.length)data=[]
     data.meta=meta
     return data
   }
