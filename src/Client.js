@@ -102,7 +102,7 @@ class Client{
 
   
   /**
-   * doGetイベントの引数からclientを作成します
+   * 認証コールバックイベントの引数からclientを作成します
    * @returns {Client}
    */
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
