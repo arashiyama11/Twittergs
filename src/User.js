@@ -100,6 +100,21 @@ class User{
     return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
 
+  getAllFollowings(queryParameters={}){
+    queryParameters.max_results=1000
+    let token=undefined
+    const result=[]
+    let data=this.getFollowing(queryParameters)
+    token=data.meta.next_token
+    result.push(...data)
+    while(token){
+      data=this.getFollowing({pagination_token:token,...queryParameters})
+      token=data.meta.token
+      result.push(...data)
+    }
+    return result
+  }
+
   /**
    * ユーザーをフォローしているユーザーを取得します
    * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
@@ -112,6 +127,21 @@ class User{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
     return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+  }
+
+  getAllFollowers(queryParameters={}){
+    queryParameters.max_results=1000
+    let token=undefined
+    const result=[]
+    let data=this.getFollowers(queryParameters)
+    token=data.meta.next_token
+    result.push(...data)
+    while(token){
+      data=this.getFollowers({pagination_token:token,...queryParameters})
+      token=data.meta.token
+      result.push(...data)
+    }
+    return result
   }
 }
 
