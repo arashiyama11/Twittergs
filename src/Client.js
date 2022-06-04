@@ -344,6 +344,14 @@ class Client{
     })
     return new User(Util.margeMeta(response))
   }
+
+  getListById(id,queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read","list.read"])
+    let response=this.fetch(`https://api.twitter.com/2/lists/${id}`,{
+      queryParameters
+    })
+    return new List(response.data,this)
+  }
   /**
    * ユーザーを検索します
    * https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
