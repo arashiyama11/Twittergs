@@ -1,7 +1,7 @@
 {
   "name": "twittergs",
   "version": "1.0.0",
-  "description": "",
+  "description": "GoogleAppsScriptで使えるTwitterAPIのラッパーライブラリです。",
   "scripts": {
     "auth": "clasp login --creds creds.json",
     "build": "node build.js"
@@ -11,5 +11,13 @@
   "license": "MIT",
   "devDependencies": {
     "@types/google-apps-script": "^1.0.47"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arashi-yama/Twittergs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arashi-yama/Twittergs/issues"
+  },
+  "homepage": "https://github.com/arashi-yama/Twittergs#readme"
 }
