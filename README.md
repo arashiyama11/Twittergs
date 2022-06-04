@@ -23,7 +23,7 @@ client.getUserByUsername("sample").getFollowers()[0].follow()
 ```
 
 # インストール方法
-ライブラリとしてインストールをすると入力補完が上手く働かないので、dist/twittergs.jsをGoogleAppsScriptにコピペしてください。  
+ライブラリとしてインストールをすると入力補完が上手く働かないので、[dist/twittergs.js](./dist/twittergs.js)をGoogleAppsScriptにコピペしてください。  
 
 # 説明
 カジュアルな説明は[Qiita]()をどうぞ  
@@ -87,13 +87,12 @@ function authorize(){
 }
 
 ```
+また、認証する際に`name`に`@auto`と指定すると認証されたTwitterアカウントのユーザー名をnameとして認証後呼び出すことができます。
 ```js
 function authorize(){
   const client=new Client({
-    name:"sample",
-    oauthVersion:"1.0a",
-    API_KEY:"<API_KEY>",
-    API_SECRET:"<API_SECRET>"
+    name:"@auto",
+    oauthVersion:"1.0a"
   })
   Logger.log(client.authorize())
 }
@@ -104,5 +103,6 @@ function authorize(){
 # 更に詳しい説明
 以下を参照してください。
 - [Client.md](./descriptions/Client.md)
+- [AppOnlyClient.md](./descriptions/AppOnlyClient.md)
 - [Tweet.md](./descriptions/Tweet.md)
 - [User.md](./descriptions/User.md)
