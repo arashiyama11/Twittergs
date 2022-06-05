@@ -16,7 +16,7 @@ const client=new Client({
 client.postTweet({text:"demo"})
 
 //検索してリツイートする
-client.serchTweet({q:"demo"})[0].retweet()
+client.serchTweets({q:"demo"})[0].retweet()
 
 //ユーザーを取得してそのフォロワーをフォローする
 client.getUserByUsername("sample").getFollowers()[0].follow()
@@ -101,6 +101,19 @@ function authorize(){
 ```
 出力されたURLで認証して認証完了です。  
 その後は引数のオブジェクトに同じ`name`を指定すれば同じ認証情報を得られます。
+
+```js
+const client=new Client({
+  name:"sample",
+  oauthVersion:"1.0a"
+})
+const result=client.getTweetById()
+Logger.log(result)
+//expected output <User>
+
+Logger.log(result.subData)
+//expected output {includes={users=[{username...}]}}
+```
 
 # 更に詳しい説明
 以下を参照してください。
