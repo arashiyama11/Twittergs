@@ -286,7 +286,7 @@ class Client{
       let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
         queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
       })
-      return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this)),meta:response.meta})
+      return Util.shapeData(response,v=>new Tweet(v,this))
     }
     let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
     return response.statuses.map(v=>new Tweet(v,this))
@@ -303,7 +303,7 @@ class Client{
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return new Tweet(Util.margeMeta(response))
+    return new Tweet(Util.mergeMeta(response),this)
   }
   /**
    * urlで指定したツイートを取得します
@@ -342,7 +342,7 @@ class Client{
     let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new User(Util.margeMeta(response))
+    return new User(Util.mergeMeta(response),this)
   }
 
   getListById(id,queryParameters){
@@ -478,7 +478,7 @@ class AppOnlyClient{
   }
   /**
    * @param {Client} client 
-   * @returns 
+   * @returns {AppOnlyClient}
    */
   setClient(client){
     this.client=client
@@ -494,7 +494,7 @@ class AppOnlyClient{
     let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
    * IDでツイートを取得します
@@ -507,7 +507,7 @@ class AppOnlyClient{
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return new Tweet(Util.margeMeta(response),this.client)
+    return new Tweet(Util.mergeMeta(response),this.client)
   }
 
   /**
@@ -521,7 +521,7 @@ class AppOnlyClient{
     let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new Tweet(Util.margeMeta(response),this.client)
+    return new Tweet(Util.mergeMeta(response),this.client)
   }
   /**
    * Bearerトークンを取得します

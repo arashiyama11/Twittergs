@@ -62,9 +62,24 @@ const Util={
     if(str.includes("?"))str=str.split("?")[1]
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
   },
-  margeMeta({meta,data}={}){
-    if(!data?.length)data=[]
-    data.meta=meta
+  /**
+   * @returns {Array}
+   */
+  mergeMeta(response){
+    let data=response.data||{}
+    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+    data.subData=sub
+    return data
+  },
+  /**
+   * @returns {Array}
+   */
+  shapeData(response,mkinstanceFn){
+    let data=response.data
+    if(data?.length!==0)data=data.map(mkinstanceFn)
+    else data=[]
+    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+    data.subData=sub
     return data
   }
 }

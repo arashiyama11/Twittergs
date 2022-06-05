@@ -47,7 +47,7 @@ class Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
    * リツイートしたユーザーを取得します
@@ -60,7 +60,7 @@ class Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new User(v,this.client))})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
    * 引用リツイートを取得します
@@ -73,7 +73,7 @@ class Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
    * ツイートにいいねします
@@ -112,7 +112,7 @@ class Tweet{
       payload:JSON.stringify({
         tweet_id:this.id
       }),
-      contenttype:"application/json"
+      contentType:"application/json"
     })
   }
   /**

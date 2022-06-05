@@ -102,7 +102,7 @@ class Client{
 
   
   /**
-   * doGetイベントの引数からclientを作成します
+   * 認証コールバックイベントの引数からclientを作成します
    * @returns {Client}
    */
   static fromCallBackEvent({e,property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET")}={}){
@@ -286,7 +286,7 @@ class Client{
       let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
         queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
       })
-      return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this)),meta:response.meta})
+      return Util.shapeData(response,v=>new Tweet(v,this))
     }
     let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
     return response.statuses.map(v=>new Tweet(v,this))
@@ -303,7 +303,7 @@ class Client{
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return new Tweet(Util.margeMeta(response))
+    return new Tweet(Util.mergeMeta(response),this)
   }
   /**
    * urlで指定したツイートを取得します
@@ -342,7 +342,15 @@ class Client{
     let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new User(Util.margeMeta(response))
+    return new User(Util.mergeMeta(response),this)
+  }
+
+  getListById(id,queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read","list.read"])
+    let response=this.fetch(`https://api.twitter.com/2/lists/${id}`,{
+      queryParameters
+    })
+    return new List(response.data,this)
   }
   /**
    * ユーザーを検索します
@@ -470,7 +478,7 @@ class AppOnlyClient{
   }
   /**
    * @param {Client} client 
-   * @returns 
+   * @returns {AppOnlyClient}
    */
   setClient(client){
     this.client=client
@@ -486,7 +494,7 @@ class AppOnlyClient{
     let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
    * IDでツイートを取得します
@@ -499,7 +507,7 @@ class AppOnlyClient{
     let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return new Tweet(Util.margeMeta(response),this.client)
+    return new Tweet(Util.mergeMeta(response),this.client)
   }
 
   /**
@@ -513,7 +521,7 @@ class AppOnlyClient{
     let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return new Tweet(Util.margeMeta(response),this.client)
+    return new Tweet(Util.mergeMeta(response),this.client)
   }
   /**
    * Bearerトークンを取得します
@@ -533,7 +541,37 @@ class AppOnlyClient{
       }
     })).access_token
   }
-}class Tweet{
+}
+class List{
+  constructor(d,client){
+    if(typeof d==="string")this.id=d
+    else Object.assign(this,d)
+    this.__proto__.client=client
+  }
+  /**
+   * 
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getFollowed(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/lists/${this.id}/followers`,{
+      queryParameters
+    })
+    return Util.shapeData(response,v=>new User(v,this.client))
+  }
+  /**
+   * 
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getMembers(queryParameters){
+    let response=this.client.fetch(`https://api.twitter.com/2/lists/${this.id}/members`,{
+      queryParameters
+    })
+    return Util.shapeData(response,new User(v,this.client))
+  }
+}
+class Tweet{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -582,7 +620,7 @@ class AppOnlyClient{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
    * リツイートしたユーザーを取得します
@@ -595,7 +633,7 @@ class AppOnlyClient{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new User(v,this.client))})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
    * 引用リツイートを取得します
@@ -608,7 +646,7 @@ class AppOnlyClient{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
    * ツイートにいいねします
@@ -621,7 +659,8 @@ class AppOnlyClient{
       method:"POST",
       payload:JSON.stringify({
         tweet_id:this.id
-      })
+      }),
+      contentType:"application/json"
     })
   }
   /**
@@ -645,7 +684,8 @@ class AppOnlyClient{
       method:"POST",
       payload:JSON.stringify({
         tweet_id:this.id
-      })
+      }),
+      contentType:"application/json"
     })
   }
   /**
@@ -672,7 +712,8 @@ class ClientTweet extends Tweet{
       method:"DELETE",
     })
   }
-}class User{
+}
+class User{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
@@ -703,7 +744,7 @@ class ClientTweet extends Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -717,7 +758,7 @@ class ClientTweet extends Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -731,7 +772,7 @@ class ClientTweet extends Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -745,7 +786,8 @@ class ClientTweet extends Tweet{
       method:"POST",
       payload:JSON.stringify({
         target_user_id:this.id
-      })
+      }),
+      contentType:"application/json"
     })
   }
 
@@ -770,7 +812,27 @@ class ClientTweet extends Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
+  }
+  /**
+   * 全てのフォローを取得します。
+   * @param {Object} queryParameters 
+   * @returns 
+   */
+  getAllFollowings(queryParameters={}){
+    queryParameters.max_results=49
+    let token=undefined
+    const result=[]
+    let data=this.getFollowing(queryParameters)
+    if(data.subData.meta.result_count===0)return data
+    token=data.subData.meta.next_token
+    result.push(...data)
+    while(token){
+      data=this.getFollowing({pagination_token:token,...queryParameters})
+      token=data.subData.meta.next_token
+      result.push(...data)
+    }
+    return result
   }
 
   /**
@@ -786,6 +848,27 @@ class ClientTweet extends Tweet{
     })
     return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
+
+  /**
+   * 全てのフォロワーを取得します。
+   * @param {Object} queryParameters 
+   * @returns 
+   */
+  getAllFollowers(queryParameters={}){
+    queryParameters.max_results=49
+    let token=undefined
+    const result=[]
+    let data=this.getFollowers(queryParameters)
+    if(data.subData.meta.result_count===0)return data
+    token=data.subData.meta.next_token
+    result.push(...data)
+    while(token){
+      data=this.getFollowing({pagination_token:token,...queryParameters})
+      token=data.subData.meta.next_token
+      result.push(...data)
+    }
+    return result
+  }
 }
 
 class ClientUser extends User{
@@ -800,7 +883,7 @@ class ClientUser extends User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
 
   /**
@@ -814,9 +897,10 @@ class ClientUser extends User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
-}const TWITTER_API_DATA={
+}
+const TWITTER_API_DATA={
   scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],
   queryParameters:{
@@ -880,8 +964,24 @@ const Util={
     if(str.includes("?"))str=str.split("?")[1]
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
   },
-  margeMeta({meta,data}={}){
-    data.meta=meta
+  /**
+   * @returns {Array}
+   */
+  mergeMeta(response){
+    let data=response.data||{}
+    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+    data.subData=sub
+    return data
+  },
+  /**
+   * @returns {Array}
+   */
+  shapeData(response,mkinstanceFn){
+    let data=response.data
+    if(data?.length!==0)data=data.map(mkinstanceFn)
+    else data=[]
+    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+    data.subData=sub
     return data
   }
 }

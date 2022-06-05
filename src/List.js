@@ -13,8 +13,7 @@ class List{
     let response=this.client.fetch(`https://api.twitter.com/2/lists/${this.id}/followers`,{
       queryParameters
     })
-    Logger.log(response)
-    return Util.margeMeta(response).map(v=>new User(v,this.client))
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
    * 
@@ -25,6 +24,6 @@ class List{
     let response=this.client.fetch(`https://api.twitter.com/2/lists/${this.id}/members`,{
       queryParameters
     })
-    return Util.margeMeta(response).map(v=>new User(v,this.client))
+    return Util.shapeData(response,new User(v,this.client))
   }
 }

@@ -29,7 +29,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -43,7 +43,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({meta:response.meta,data:response.data.map(v=>new Tweet(v,this.client))})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -57,7 +57,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
-    return Util.margeMeta({data:response.data.map(v=>new Tweet(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
   /**
@@ -97,19 +97,24 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
-
+  /**
+   * 全てのフォローを取得します。
+   * @param {Object} queryParameters 
+   * @returns 
+   */
   getAllFollowings(queryParameters={}){
-    queryParameters.max_results=1000
+    queryParameters.max_results=49
     let token=undefined
     const result=[]
     let data=this.getFollowing(queryParameters)
-    token=data.meta.next_token
+    if(data.subData.meta.result_count===0)return data
+    token=data.subData.meta.next_token
     result.push(...data)
     while(token){
       data=this.getFollowing({pagination_token:token,...queryParameters})
-      token=data.meta.token
+      token=data.subData.meta.next_token
       result.push(...data)
     }
     return result
@@ -129,16 +134,22 @@ class User{
     return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
 
+  /**
+   * 全てのフォロワーを取得します。
+   * @param {Object} queryParameters 
+   * @returns 
+   */
   getAllFollowers(queryParameters={}){
-    queryParameters.max_results=1000
+    queryParameters.max_results=49
     let token=undefined
     const result=[]
     let data=this.getFollowers(queryParameters)
-    token=data.meta.next_token
+    if(data.subData.meta.result_count===0)return data
+    token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowers({pagination_token:token,...queryParameters})
-      token=data.meta.token
+      data=this.getFollowing({pagination_token:token,...queryParameters})
+      token=data.subData.meta.next_token
       result.push(...data)
     }
     return result
@@ -157,7 +168,7 @@ class ClientUser extends User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
 
   /**
@@ -171,6 +182,6 @@ class ClientUser extends User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this.client))
   }
 }
