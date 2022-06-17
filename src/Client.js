@@ -170,10 +170,7 @@ class Client{
    * トークンをリフレッシュします
    */
   refresh(){
-    this.validate({
-      scope:["offline.access"],
-      oauthVersion:["2.0"]
-    })
+    this.validate(["2.0"],["offline.access"])
     const options={
       method:"POST",
       headers:{
@@ -369,9 +366,7 @@ class Client{
    * @returns {Object}
    */
   uploadMedia(blob){
-    this.validate({
-      oauthVersion:["1.0a"]
-    })
+    this.validate(["1.0a"])
     
     const data = Utilities.newBlob(
       blob.getBytes(),
@@ -395,9 +390,7 @@ class Client{
    * @returns {Object}
    */
   uploadBigMedia(blob){
-    this.validate({
-      oauthVersion:["1.0a"]
-    })
+    this.validate(["1.0a"])
     const url="https://upload.twitter.com/1.1/media/upload.json"
     const name=blob.getName()
     const mimeType=blob.getContentType()
