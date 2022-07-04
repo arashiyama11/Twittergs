@@ -5,7 +5,9 @@ GoogleAppsScriptで使えるTwitterAPIのラッパーライブラリです。
 - オブジェクト指向
 - OAuth1.0a、2.0両方対応
 
-
+# 注意点
+- 基本的にTwitterAPIv1.1,2.0両方にあるものはv2.0を叩いています。
+- APIの全てを網羅している訳ではありません。よく使うものを優先的に実装しています。
 # サンプル
 ```js
 const client=new Client({
@@ -25,8 +27,21 @@ client.getUserByUsername("sample").getFollowers()[0].follow()
 # インストール方法
 ライブラリとしてインストールをすると入力補完が上手く働かないので、[dist/twittergs.js](./dist/twittergs.js)をGoogleAppsScriptにコピペしてください。  
 
+:::note warn  
+ライブラリのオブジェクト、クラスは全てトップレベルに宣言されることになります。  
+以下のリストと同名の宣言がされる場合不具合が発生することがあります。  
+- CLIENT
+- AppOnlyClient
+- Tweet
+- ClientTweet
+- User
+- ClientUser
+- Property
+- Util
+- TWITTER_API_DATA  
+:::
+
 # 説明
-カジュアルな説明は[Qiita]()をどうぞ  
 まず、最初に以下のように環境変数を設定することを強くオススメします
 ```js
 function setEnv(){
@@ -45,6 +60,12 @@ function setEnv(){
 [Twitter Developer Potal](https://developer.twitter.com/en/portal/dashboard)で、利用したいAppのリダイレクトURLを以下のように設定します
 ```
 https://script.google.com/macros/d/スクリプトID/usercallback
+```
+
+このURLは以下のように取得することが出来ます。
+```
+Util.getCallBackURL()
+//=>https://script.google.com/macros/d/スクリプトID/usercallback
 ```
 
 その後、スクリプトに以下のように記述します
@@ -114,6 +135,27 @@ Logger.log(result)
 Logger.log(result.subData)
 //expected output {includes={users=[{username...}]}}
 ```
+
+TwitterAPIv2のレスポンスは大体以下のようになりますが、
+```json
+{
+  "data":[],
+  "includes":{}
+}
+```
+本ライブラリでは上のサンプルのように`data`が前に出されてその他のプロパティは`data.subData`に収納されます。  
+また、data中のオブジェクトは適切に`Tweet`や`User`クラスに変換されますが、subData中のオブジェクトはそういった変換がされないので注意してください。  
+:::warn
+data.filterと言ったArrayのインスタンスメゾットを使用した後はdata.subDataはundefinedになります。
+```js
+const tweets=client.user.getTimeLine().filter(twt=>twt.text.length>10)
+Logger.log(tweets.subData)
+//=>undefined
+```
+subDataを使用する場合は必ず上記のような操作をする前にdata.subDataを避難させてください。
+:::
+
+
 
 # 更に詳しい説明
 以下を参照してください。
