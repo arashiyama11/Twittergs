@@ -51,7 +51,7 @@ const Util={
    * @returns {string}
    */
   buildParam(obj){
-    return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&")
+    return Object.entries(obj).map(([k,v])=>Util.parcentEncode(k)+"="+Util.parcentEncode(v)).join("&")
   },
   /**
    * 
@@ -63,7 +63,7 @@ const Util={
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
   },
   /**
-   * @returns {Array}
+   * @returns {Object}
    */
   mergeMeta(response){
     let data=response.data||{}
@@ -74,11 +74,9 @@ const Util={
   /**
    * @returns {Array}
    */
-  shapeData(response,mkinstanceFn){
-    let data=response.data
-    if(data?.length!==0)data=data.map(mkinstanceFn)
-    else data=[]
-    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+  shapeData(response,mkinstanceFn,mainData="data"){
+    const data=response[mainData].map(mkinstanceFn)||[]
+    const sub=Object.fromEntries(Object.entries(response).filter(([k])=>k!==mainData))
     data.subData=sub
     return data
   }

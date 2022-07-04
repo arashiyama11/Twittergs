@@ -285,8 +285,8 @@ class Client{
       })
       return Util.shapeData(response,v=>new Tweet(v,this))
     }
-    let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
-    return response.statuses.map(v=>new Tweet(v,this))
+    const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
+    return Util.shapeData(response,v=>new Tweet(v,this),"statuses")
   }
   /**
    * idで指定したツイートを取得します
@@ -357,7 +357,8 @@ class Client{
    */
   searchUsers(queryParameters){
     this.validate(["1.0a"])
-    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).statuses.map(v=>new User(v,this))
+    let response=this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters})
+    return response.map(v=>new User(v,this))
   }
   /**
    * 5MB未満のメディアをアップロードします
