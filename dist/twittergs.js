@@ -170,10 +170,7 @@ class Client{
    * トークンをリフレッシュします
    */
   refresh(){
-    this.validate({
-      scope:["offline.access"],
-      oauthVersion:["2.0"]
-    })
+    this.validate(["2.0"],["offline.access"])
     const options={
       method:"POST",
       headers:{
@@ -288,8 +285,8 @@ class Client{
       })
       return Util.shapeData(response,v=>new Tweet(v,this))
     }
-    let response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
-    return response.statuses.map(v=>new Tweet(v,this))
+    const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
+    return Util.shapeData(response,v=>new Tweet(v,this),"statuses")
   }
   /**
    * idで指定したツイートを取得します
@@ -360,7 +357,8 @@ class Client{
    */
   searchUsers(queryParameters){
     this.validate(["1.0a"])
-    return this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters}).statuses.map(v=>new User(v,this))
+    let response=this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters})
+    return response.map(v=>new User(v,this))
   }
   /**
    * 5MB未満のメディアをアップロードします
@@ -369,9 +367,7 @@ class Client{
    * @returns {Object}
    */
   uploadMedia(blob){
-    this.validate({
-      oauthVersion:["1.0a"]
-    })
+    this.validate(["1.0a"])
     
     const data = Utilities.newBlob(
       blob.getBytes(),
@@ -395,9 +391,7 @@ class Client{
    * @returns {Object}
    */
   uploadBigMedia(blob){
-    this.validate({
-      oauthVersion:["1.0a"]
-    })
+    this.validate(["1.0a"])
     const url="https://upload.twitter.com/1.1/media/upload.json"
     const name=blob.getName()
     const mimeType=blob.getContentType()
@@ -953,7 +947,7 @@ const Util={
    * @returns {string}
    */
   buildParam(obj){
-    return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&")
+    return Object.entries(obj).map(([k,v])=>Util.parcentEncode(k)+"="+Util.parcentEncode(v)).join("&")
   },
   /**
    * 
@@ -965,7 +959,7 @@ const Util={
     return Object.fromEntries(str.split("&").map(v=>v.split("=").map(decodeURIComponent)))
   },
   /**
-   * @returns {Array}
+   * @returns {Object}
    */
   mergeMeta(response){
     let data=response.data||{}
@@ -976,11 +970,9 @@ const Util={
   /**
    * @returns {Array}
    */
-  shapeData(response,mkinstanceFn){
-    let data=response.data
-    if(data?.length!==0)data=data.map(mkinstanceFn)
-    else data=[]
-    let sub=Object.fromEntries(Object.entries(response).filter(([k,v])=>k!=="data"))
+  shapeData(response,mkinstanceFn,mainData="data"){
+    const data=response[mainData].map(mkinstanceFn)||[]
+    const sub=Object.fromEntries(Object.entries(response).filter(([k])=>k!==mainData))
     data.subData=sub
     return data
   }
