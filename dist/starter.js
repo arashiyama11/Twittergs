@@ -16,6 +16,10 @@ function authorize(){
   Logger.log(client.authorize())
 }
 
+
+function getCallBackURL(){
+  Logger.log(Util.getCallBackURL())
+}
 function authCallBack(e){
   const result=Client.fromCallBackEvent({e:e}).isAuthorized(e)
   if(result){
