@@ -277,7 +277,7 @@ class Client{
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
-  serchTweets(queryParameters){
+  searchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
       this.validate(["2.0"],["tweet.read","users.read"])
       let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
