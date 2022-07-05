@@ -56,7 +56,7 @@ const client=new Client({
     OAuth1.0aを用いて認証する場合は必須です。
     デフォルトは`propety.getPropety("API_SECRET")`です。
 
-- ### ACCESS_TOKEN \<strnig\>
+- ### ACCESS_TOKEN \<string\>
     OAuth1.0a,2.0どちらでも利用可能です。
     1.0aの場合は`oauth_token`を表します。
     2.0の場合は`bearer_token`を表します。
