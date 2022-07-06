@@ -38,6 +38,7 @@ class Client{
    * @param {string[]} scope 
    */
   validate(oauthVersion,scope){
+    if(!this.hasAuthorized())throw new Error("認証されていません")
     if(!oauthVersion.includes(this.oauthVersion))throw new Error(`${oauthVersion.join()}のみで使用可能です`)
     if(this.oauthVersion==="2.0"&&scope.length)scope.forEach(s=>{
       if(!this.scope?.includes(s))throw new Error(`${scope.filter(s=>!this.scope.includes(s))}スコープが不足しています`)
