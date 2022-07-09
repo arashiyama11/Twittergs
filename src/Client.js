@@ -329,13 +329,7 @@ class Client{
     let response = this.fetch("https://api.twitter.com/2/tweets", option)
     return new ClientTweet(response.data, this)
   }
-  /**
-   * ユーザーネームからユーザーを取得します
-   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
-   * @param {string} username 
-   * @param {Object} queryParameters 
-   * @returns {User}
-   */
+  
   
   /**
    * idからリストを取得します
@@ -363,6 +357,13 @@ class Client{
     return response.map(v=>new User(v,this))
   }
 
+  /**
+   * ユーザーネームからユーザーを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
+   * @param {string} username 
+   * @param {Object} queryParameters 
+   * @returns {User}
+   */
   getUserByUsername(username,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
@@ -371,7 +372,7 @@ class Client{
     return new User(Util.mergeMeta(response),this)
   }
 
-  
+
   /**
    * 5MB未満のメディアをアップロードします
    * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
