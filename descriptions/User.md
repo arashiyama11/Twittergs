@@ -22,7 +22,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 - #### queryParameters \<Object\>
     クエリーパラメータです。
 有効な値は[TWITTER_API_DATA.queryParameters.user](../src/Util.js)にあります。
-### 返値
+### 返り値
 アップデートされたそのUserオブジェクトです
 
 ### 例
@@ -43,7 +43,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get
 - ### queryParameters \<Object\>
   クエリーパラメータです
 有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
-### 返値
+### 返り値
 Tweetクラスの配列です。
 metaプロパティでmeta情報にアクセスできます。
 
@@ -65,7 +65,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference
 - #### queryParameters \<Object\>
     クエリーパラメータです
 有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
-### 返値
+### 返り値
 Tweetクラスの配列です。
 metaプロパティでmeta情報にアクセスできます。
 
@@ -86,7 +86,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference
 - #### queryParameters \<Object\>
     クエリーパラメータです
     有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
-### 返値
+### 返り値
 Tweetクラスの配列です。
 metaプロパティでmeta情報にアクセスできます。
 
@@ -105,7 +105,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/po
 
 ### 引数
 引数はありません。
-### 返値
+### 返り値
 Objectです。成功した場合は以下のObjectが返されます。
 ```js
 {

@@ -131,7 +131,7 @@ Client.fromCallBackEvent({
     OAuth1.0aを用いて認証する場合は必須です。
     デフォルトは`propety.getPropety("API_SECRET")`です。
 
-### 返値 <Client\>
+### 返り値 <Client\>
 
 ## getAuthorizedUsers(property):Array<Array<string\>\>
 与えられた`property`に認証されているユーザーを返します
@@ -140,7 +140,7 @@ Client.fromCallBackEvent({
     `ScriptProperties`,`PropertiesService.getScriptProperties()`等がこれに該当します。
     デフォルトは`PropertiesService.getUserProperties()`です。
 
-### 返値
+### 返り値
 以下のような配列が返されます
 ```json
 [
