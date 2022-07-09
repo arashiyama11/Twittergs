@@ -26,7 +26,7 @@ const client=new Client({
 
 - ### oauthVersion \<string\>
     使用するOAuthのバージョンを選択肢します。
-    利用可能なのは`1.0a`と`2.0`の二つのみです。
+    利用可能なのは`1.0a`と`2.0`の二つのみ利用できます。
 
 - ### restTime <number||Function>
     fetchする際の`Utilities.sleep`する時間(ms)を指定します。
@@ -36,7 +36,7 @@ const client=new Client({
 - ### id \<string\>
     TwitterのユーザーIDを表します。
     1.0aで認証されている場合はデフォルトでその認証されたユーザーのIDが指定されるので、その場合は指定する必要はありません。  
-    2.0の場合は手動で明示的にidを指定してください。
+    2.0の場合は手動で明示的にidを指定してください。  
     idが指定されない場合は`client.user`にアクセスすることができません。
 
 
@@ -68,6 +68,7 @@ const client=new Client({
 ## 例
 ```js
 const client=new Client({
+  property:ScriptProperties,
   name:"sample",
   oauthVersion:"1.0a",
   restTime:()=>Math.random()*10000
@@ -83,8 +84,18 @@ const client=new Client({
   CLIENT_SECRET:CLIENT_SECRET
 })
 ```
+
+```js
+const client=new Client({
+  name:"sample",
+  oauthVersion:"1.0a",
+  ACCESS_TOKEN:"1234-hogehoge",
+  ACCESS_TOKEN_SECRET:"foobar"
+})
+```
+
 # 静的メゾット
-## fromCallBackEvent(options)
+## fromCallBackEvent(options):Client
 認証のコールバックイベントの引数からClientを作成します。
 ### 構文
 ```js
@@ -119,10 +130,9 @@ Client.fromCallBackEvent({
     OAuth1.0aを用いて認証する場合は必須です。
     デフォルトは`propety.getPropety("API_SECRET")`です。
 
-### 返値
-Clientです。
+### 返値 <Client\>
 
-## getAuthorizedUsers(property)
+## getAuthorizedUsers(property):Array<Array<string\>\>
 与えられた`property`に認証されているユーザーを返します
 ### 引数
 - #### property <Properties>
@@ -131,12 +141,221 @@ Clientです。
 
 ### 返値
 以下のような配列が返されます
-```
+```json
 [
   ["1.0a authorized users..."],
   ["2.0 authorized users..."]
 ]
 ```
 
-refreshAll()
+## refreshAll(options):void
+### 構文  
+```js
+Client.refreshAll({
+  CLIENT_ID:string,
+  CLIENT_SECRET:string,
+  names:Array<string>
+})
+```
+### 引数  
+- #### CLIENT_ID <string\>
+    CLIENT_IDです。
+    環境変数に設定してある場合は省略可能です。
+- #### CLIENT_SECRET <string\>
+    CLIENT_SECRETです。
+    環境変数に設定してある場合は省略可能です。
+- #### names <Array<string\>\>
+    リフレッシュするclientのnameの配列です。
+### 返り値
+返り値はありません。
 # インスタンスメゾット
+## 認証関連
+### validate(oauthVersion,scope):void
+clinetが認証済みで、oauthVersionとscopeを持っているか検証します。持っていない場合はエラーが投げられます。
+#### 構文
+```js
+client.validate(Array<string>,Array<string>)
+```
+#### 引数
+- ##### oauthVersion <Array<string\>\>
+    配列の要素は`"1.0a"`と`"2.0"`のみ有効です。   
+    この引数に含まれているが、clinetに含まれていない場合はエラーが投げられます。 
+- ##### scope <Array<string\>\>
+    配列の要素はTWITTER_API_DATA.scopesにあるもののみ有効です。  
+    この引数に含まれているが、clinetに含まれていない場合はエラーが投げられます。 
+
+### authorize(scopes):string
+clinetの認証URLを返します。  
+もしclinet.nameが`@auto`の場合はTwitterのユーザーネームとして認証されます。  
+#### 引数
+- ##### scopes <Array<string\>\>
+    認証する際に有効にする`scope`を指定します。  
+clinet.oauthVersionが`1.0a`の場合は指定する必要はありません。  
+デフォルトは`TWITTER_API_DATA.scopes`です。  
+
+#### 返り値 <string\>
+認証URLです。
+
+### isAuthorized(e):boolean
+コールバックのイベントから認証がされているか検証します。
+#### 引数
+- ##### e <Object\>
+    コールバックのイベントの引数です。
+#### 返り値 <boolean\>
+認証が正常に完了したかどうかを返します
+
+### refresh():void
+clientをリフレッシュします。
+2.0専用です。
+#### 引数
+引数はありません。
+#### 返り値
+返り値はありません。
+
+### hasAuthorized():boolean
+clientが認証されたかを返します
+#### 引数
+引数はありません。
+#### 返り値 <boolean\>
+clientが過去に認証されたかどうかを返します。
+
+## API関連
+### fetch(url,options):Object
+認証情報を乗せてHTTP通信します。  
+optionsのほとんどはUrlFetchApp.fetchの第二引数と同じです。
+### 構文
+```js
+client.fetch(string,{
+  method:string,
+  headers:Object,
+  payload:Object,
+  contentType:string,
+  queryParameters:Object,
+  oauthParameters:Object,
+  useIntranet:boolean,
+  validateHttpsCertificates:boolean,
+  followRedirects:boolean,
+  muteHttpExceptions:boolean,
+  escaping:boolean
+})
+```
+#### 引数
+- ##### url <string\>
+    fetchするURLです。
+- ##### method <string\>
+    fetchする際のメソッドです。  
+    デフォルトは`GET`です。  
+- ##### headers <Object\>
+    fetchする際のheaderです。
+- ##### contentType <string\>
+    このパラメータは必須です。  
+    fetchする際のcontentTypeです。  
+    `multipart/form-data`で`POST`する際は`payload`をオブジェクトにして`contentType`に`multipart/form-data`とそのまま入力してください。
+- ##### queryParameters <Object\>
+    urlのクエリーパラメータとして追加されるオブジェクトです。
+- ##### oauthParameters <Object\>
+    OAuthの追加パラメータとして追加されるオブジェクトです。
+- ##### その他 
+    useIntranet:boolean,  
+  validateHttpsCertificates:boolean,  
+  followRedirects:boolean,  
+  muteHttpExceptions:boolean,  
+  escaping:boolean  
+  これらはそのままUrlFetchApp.fetchの第二引数のオブジェクトに渡すので[GASのリファレンス](https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app?hl=en#fetchurl,-params)を参照してください。
+
+#### 返り値 <Object\>           
+レスポンスのオブジェクトです。
+### searchTweets(queryParameters):Array<Tweet\>
+#### 引数 
+- ##### queryParameters <Object\> 
+    [1.0a](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets),[2.0](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。
+#### 返り値 Array<Tweet\>
+  
+### getTweetById(id,queryParameters):Tweet
+ツイートIDからツイートを取得します。
+もし、単純にTweetクラスのインスタンスメゾットが使用したいだけの場合はTweetコンストラクタの使用をご検討ください。
+#### 引数
+- ##### id <string\>
+    取得したいツイートのIDです。
+- ##### queryParameters <Object\>
+    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
+#### 返り値 <Tweet\>
+
+### getTweetByURL(url,queryParameters):Tweet
+URLからツイートを取得します。
+#### 引数
+- ##### url <string\>
+    取得したいツイートのURLです。
+- ##### queryPatamters <Object\>
+    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
+#### 返り値 <Tweet\>
+
+### postTweet(payload):ClientTweet
+#### 引数
+- ##### payload <Object\>
+    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets)を参照してください。
+#### 返り値 <ClientTweet\>
+投稿したツイートです。
+
+### getListById(id,queryParameters):List
+#### 引数
+- ##### id <string\>
+取得したいリストのidです
+#### 返り値　<List\>
+
+### searchUsers(queryParameters):Array<User\>
+#### 引数
+- ##### queryParameters <Object\>
+[こちら](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search)を
+#### 返り値 <Array<User\>\>
+
+### getUserByUsername(username,queryParameters):User
+#### 引数
+- ##### username <string\>
+取得したいユーザーのユーザネームです。
+- ##### queryParameters <Object\>
+[こちら](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
+
+#### 返り値 <User\>
+
+### uploadMedia(blob):Object
+画像をアップロードします。5MB未満専用です。
+#### 引数
+- ##### blob <Blob\>
+アップロードする画像のBlobオブジェクトです。
+#### 返り値 <Object\>
+以下のようなオブジェクトが返されます。
+```json
+{
+    "media_id":1234567890,
+    "media_id_string":"1234567890",
+    "size":54321,
+    "expires_after_secs":86400,
+    "image":{
+        "image_type":"image/jpeg",
+        "w":2280,
+        "h":1080
+    }
+}
+```
+
+### uploadBigMedia(blob):Object
+画像,動画をアップロードします。
+#### 引数
+- ##### blob <Blob\>
+アップロードしたい画像
+#### 返り値 <Object\>
+以下のようなオブジェクトが返されます。
+```json
+{
+    "media_id":1234567890,
+    "media_id_string":"1234567890",
+    "size":54321,
+    "expires_after_secs":86400,
+    "image":{
+        "image_type":"image/jpeg",
+        "w":2280,
+        "h":1080
+    }
+}
+```
