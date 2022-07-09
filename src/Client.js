@@ -206,6 +206,7 @@ class Client{
    * @returns {Object}
    */
   fetch(url,options){
+    if(!url)throw new Error("urlがありません")
     if(this.oauthVersion==="2.0"){
       options.method=options.method?.toUpperCase()||"GET"
       if (!options) options = {}
@@ -335,14 +336,14 @@ class Client{
    * @param {Object} queryParameters 
    * @returns {User}
    */
-  getUserByUsername(username,queryParameters){
-    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
-    return new User(Util.mergeMeta(response),this)
-  }
-
+  
+  /**
+   * idからリストを取得します
+   * https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-reference/get-lists-id-tweets
+   * @param {string} id 
+   * @param {Object} queryParameters 
+   * @returns {List}
+   */
   getListById(id,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read","list.read"])
     let response=this.fetch(`https://api.twitter.com/2/lists/${id}`,{
@@ -361,6 +362,16 @@ class Client{
     let response=this.fetch("https://api.twitter.com/1.1/users/search.json",{queryParameters})
     return response.map(v=>new User(v,this))
   }
+
+  getUserByUsername(username,queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
+      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
+    })
+    return new User(Util.mergeMeta(response),this)
+  }
+
+  
   /**
    * 5MB未満のメディアをアップロードします
    * https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
