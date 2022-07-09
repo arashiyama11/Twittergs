@@ -1,5 +1,6 @@
 # Client
 
+# コンストラクタ
 ## 構文
 ```js
 const client=new Client({
