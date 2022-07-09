@@ -497,7 +497,7 @@ class AppOnlyClient{
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
-  serchTweets(queryParameters){
+  searchTweets(queryParameters){
     let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
     })
