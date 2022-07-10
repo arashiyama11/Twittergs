@@ -15,7 +15,9 @@ const tweet=new Tweet(d,client)
 - #### client \<Client\>
     そのツイートに対して操作を行うClientです
 
-
+# プロパティ
+## tweet.author
+ツイートの著者の[User](./User.md)オブジェクトです。
 # インスタンスメゾット
 ## update(queryParameters):Tweet
 ### Twitterドキュメント
