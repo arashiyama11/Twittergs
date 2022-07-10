@@ -63,7 +63,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 
 
 
-## getQuoteTweets(queryParameters):Array<Tweet>
+## getQuoteTweets(queryParameters):Array<Tweet\>
 引用ツイートを取得します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets
