@@ -1,6 +1,6 @@
 # ClientUser
 [User](./User.md)を継承しています。
-# 取得方法例
+# 取得方法
 取得方法は以下の一つだけです。
 ```js
 client.user
@@ -9,4 +9,20 @@ client.user
 
 # インスタンスメゾット
 [User](./User.md)のインスタンスメゾットの他に以下2つのインスタンスメゾットを持っています
-## getBloking(queryParameters)
+## getBlockingUsers(queryParameters):Array<User\>
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/get-users-blocking
+
+### 引数
+- #### queryParameters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/get-users-blocking)を参照してください。
+### 返り値 Array<User\>
+
+## getMutingUsers(queryParameters):Array<User\>
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-users-muting
+
+### 引数
+- #### getMutingUsers <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-users-muting)を参照してください。
+### 返り値 Array<User\>
