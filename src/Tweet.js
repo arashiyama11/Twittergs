@@ -4,6 +4,12 @@ class Tweet{
     else Object.assign(this,d)
     if(this.author_id)this.author=new User(this.author_id,client)
     this.__proto__.client=client
+    if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
+  }
+
+  validate(){
+    if(!this.client)throw new Error("clientがありません")
+    if(!this.id)throw new Error("idがありません")
   }
   /**
    * ツイートの情報をアップデートします
@@ -12,6 +18,7 @@ class Tweet{
    * @returns {Tweet}
    */
   update(queryParameters){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
@@ -26,6 +33,7 @@ class Tweet{
    * @returns {ClientTweet}
    */
   reply(payload){
+    this.validate()
     this.client.validate(["1.0a","2.0",["tweet.read,","tweet.write","users.read"]])
     payload={
       ...payload,
@@ -43,6 +51,7 @@ class Tweet{
    * @returns {User[]}
    */
   getLiked(queryParameters){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
@@ -56,6 +65,7 @@ class Tweet{
    * @returns {User[]}
    */
   getRetweeted(queryParameters){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
@@ -69,6 +79,7 @@ class Tweet{
    * @returns {Tweet[]}
    */
   getQuoteTweets(queryParameters){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
@@ -81,6 +92,7 @@ class Tweet{
    * @returns {Object}
    */
   like(){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes`,{
       method:"POST",
@@ -96,6 +108,7 @@ class Tweet{
    * @returns {Object}
    */
   deleteLike(){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.write"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/likes/${this.id}`,{method:"DELETE"})
   }
@@ -106,6 +119,7 @@ class Tweet{
    * @returns {Object}
    */
   retweet(){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets`,{
       method:"POST",
@@ -121,6 +135,7 @@ class Tweet{
    * @returns {Object}
    */
   deleteRetweet(){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
   }
@@ -134,6 +149,7 @@ class ClientTweet extends Tweet{
    * @returns {Object}
    */
   delete(){
+    this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}`,{
       method:"DELETE",
