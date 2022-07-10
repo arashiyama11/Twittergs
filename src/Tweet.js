@@ -50,7 +50,7 @@ class Tweet{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getLiked(queryParameters){
+  getLikedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
@@ -64,7 +64,7 @@ class Tweet{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getRetweeted(queryParameters){
+  getRetweetedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
