@@ -18,7 +18,7 @@ const client=new Client({
 client.postTweet({text:"demo"})
 
 //検索してリツイートする
-client.serchTweets({q:"demo"})[0].retweet()
+client.searchTweets({q:"demo"})[0].retweet()
 
 //ユーザーを取得してそのフォロワーをフォローする
 client.getUserByUsername("sample").getFollowers()[0].follow()
