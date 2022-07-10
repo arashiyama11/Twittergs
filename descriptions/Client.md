@@ -96,7 +96,7 @@ const client=new Client({
 ```
 
 # 静的メゾット
-## fromCallBackEvent(options):Client
+## static fromCallBackEvent(options):Client
 認証のコールバックイベントの引数からClientを作成します。
 ### 構文
 ```js
@@ -133,7 +133,7 @@ Client.fromCallBackEvent({
 
 ### 返り値 <Client\>
 
-## getAuthorizedUsers(property):Array<Array<string\>\>
+## static getAuthorizedUsers(property):Array<Array<string\>\>
 与えられた`property`に認証されているユーザーを返します
 ### 引数
 - #### property <Properties>
@@ -149,7 +149,7 @@ Client.fromCallBackEvent({
 ]
 ```
 
-## refreshAll(options):void
+## static refreshAll(options):void
 ### 構文  
 ```js
 Client.refreshAll({
