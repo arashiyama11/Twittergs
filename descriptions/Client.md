@@ -95,6 +95,10 @@ const client=new Client({
 })
 ```
 
+# プロパティ
+## clinet.user <ClientUser\>
+認証したユーザーを表す[ClientUser](./ClientUser.md)オブジェクトです。
+
 # 静的メゾット
 ## static fromCallBackEvent(options):Client
 認証のコールバックイベントの引数からClientを作成します。
@@ -220,7 +224,7 @@ clientが認証されたかを返します
 #### 返り値 <boolean\>
 clientが過去に認証されたかどうかを返します。
 
-## API関連
+## Twitter操作関連
 ### fetch(url,options):Object
 認証情報を乗せてHTTP通信します。  
 optionsのほとんどはUrlFetchApp.fetchの第二引数と同じです。
@@ -257,7 +261,7 @@ client.fetch(string,{
 - ##### oauthParameters <Object\>
     OAuthの追加パラメータとして追加されるオブジェクトです。
 - ##### その他 
-    useIntranet:boolean,  
+　useIntranet:boolean,  
   validateHttpsCertificates:boolean,  
   followRedirects:boolean,  
   muteHttpExceptions:boolean,  
@@ -267,6 +271,9 @@ client.fetch(string,{
 #### 返り値 <Object\>           
 レスポンスのオブジェクトです。
 ### searchTweets(queryParameters):Array<Tweet\>
+#### Twitterドキュメント
+1.0a https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets  
+2.0 https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 #### 引数 
 - ##### queryParameters <Object\> 
     [1.0a](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets),[2.0](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。
@@ -275,52 +282,72 @@ client.fetch(string,{
 ### getTweetById(id,queryParameters):Tweet
 ツイートIDからツイートを取得します。
 もし、単純にTweetクラスのインスタンスメゾットが使用したいだけの場合はTweetコンストラクタの使用をご検討ください。
+
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
 #### 引数
 - ##### id <string\>
     取得したいツイートのIDです。
 - ##### queryParameters <Object\>
-    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
 #### 返り値 <Tweet\>
 
 ### getTweetByURL(url,queryParameters):Tweet
 URLからツイートを取得します。
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
 #### 引数
 - ##### url <string\>
     取得したいツイートのURLです。
 - ##### queryPatamters <Object\>
-    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
 #### 返り値 <Tweet\>
 
 ### postTweet(payload):ClientTweet
+ツイートを投稿します。
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
 #### 引数
 - ##### payload <Object\>
-    [こちら](https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets)を参照してください。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets)を参照してください。
 #### 返り値 <ClientTweet\>
 投稿したツイートです。
 
 ### getListById(id,queryParameters):List
+IDからリストを取得します。
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-reference/get-lists-id-tweets
+
 #### 引数
 - ##### id <string\>
 取得したいリストのidです
+- ##### queryParameters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-reference/get-lists-id-tweets)を参照してください。
 #### 返り値　<List\>
 
 ### searchUsers(queryParameters):Array<User\>
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
 #### 引数
 - ##### queryParameters <Object\>
-[こちら](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search)を
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search)を
 #### 返り値 <Array<User\>\>
 
 ### getUserByUsername(username,queryParameters):User
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
 #### 引数
 - ##### username <string\>
 取得したいユーザーのユーザネームです。
 - ##### queryParameters <Object\>
-[こちら](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
 
 #### 返り値 <User\>
 
 ### uploadMedia(blob):Object
 画像をアップロードします。5MB未満専用です。
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
 #### 引数
 - ##### blob <Blob\>
 アップロードする画像のBlobオブジェクトです。
@@ -342,9 +369,13 @@ URLからツイートを取得します。
 
 ### uploadBigMedia(blob):Object
 画像,動画をアップロードします。
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload-init  
+https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload-append  
+https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload-finalize  
 #### 引数
 - ##### blob <Blob\>
-アップロードしたい画像
+アップロードしたい画像のBlobオブジェクトです。
 #### 返り値 <Object\>
 以下のようなオブジェクトが返されます。
 ```json

@@ -26,7 +26,7 @@ tweets.forEach(twt=>{
 
 ## delete():Object
 ツイートを削除します
-### Twitterリファレンス
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/delete-tweets-id
 ### 引数
 引数はありません。

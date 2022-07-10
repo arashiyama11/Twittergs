@@ -51,43 +51,52 @@ app.fetch(string,{
 レスポンスのオブジェクトです。
 
 ## setClient(client) :AppOnlyClient
+appのインスタンスメゾットの返り値の`Tweet`や`User`を操作する`Client`を設定します。
 ### 構文
 ```js
 app.setClient(Client)
 ```
 ### 引数
 #### client <Client\>
-### 戻り値 AppOnlyClient
-thisを返します
+### 戻り値 <AppOnlyClient\>
+thisを返します。
 
 ## searchTweets(queryParameters):Array<Tweet\>
 ツイートを検索します。
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 ### 引数
 - #### queryParameters <Object\>
-   [https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent](こちら)を参照してください。
+   [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。
 
 ### 戻り値 <Array<Tweet\>\>
 
 ## getTweetById(id,queryParameters):Tweet
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
 ### 引数
 - #### id <string\>
 取得したいツイートのidです。
 - #### queryParameters <Object\>
-   [https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id](こちら)を参照してください。
+   [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id)を参照してください。
 
 ### 戻り値 <Tweet>
 
 ## getUserByUsername:User
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
 ### 引数
 - #### username <string\>
 取得したいユーザーのユーザーネームです
 - #### queryParameters <Object\>
-[https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username](こちら)を参照してください。
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。
 
 ### 戻り値 <User>
 
 ## static getBearerToken(API_KEY,API_SECRET):string
 ベアラートークンを取得します。
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/authentication/api-reference/token
 ### 引数 
 #### API_KEY <string\>
 デフォルトは`PropertiesService.getUserProperties().getProperty("API_KEY")`です
