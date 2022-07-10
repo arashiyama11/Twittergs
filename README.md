@@ -151,6 +151,9 @@ TwitterAPIv2のレスポンスは大体以下のようになりますが、
 }
 ```
 本ライブラリでは上のサンプルのように`data`が前に出されてその他のプロパティは`data.subData`に収納されます。  
+```js
+[,,,subData:{includes:{}}]
+```
 また、data中のオブジェクトは適切に`Tweet`や`User`クラスに変換されますが、subData中のオブジェクトはそういった変換がされないので注意してください。  
 ### 注意
 data.filterと言ったArrayのインスタンスメゾットを使用した後はdata.subDataはundefinedになります。
@@ -168,4 +171,6 @@ subDataを使用する場合は必ず上記のような操作をする前にdata
 - [Client.md](./descriptions/Client.md)
 - [AppOnlyClient.md](./descriptions/AppOnlyClient.md)
 - [Tweet.md](./descriptions/Tweet.md)
+- [ClientTweet.md](./descriptions/ClientTweet.md)
 - [User.md](./descriptions/User.md)
+- [ClientUser.md](./descriptions/ClientUser.md)
