@@ -1,3 +1,4 @@
+//長いツイートを分割してツリーにして投稿
 function treeTweet(){
   const client=new Client({
     name:"sample",
@@ -18,6 +19,7 @@ function treeTweet(){
   }while(text[(i+1)*tweetTextSize]!==undefined)
 }
 
+//画像を投稿
 function tweetWithMedias(){
   const client=new Client({
     name:"sample",
