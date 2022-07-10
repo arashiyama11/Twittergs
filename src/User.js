@@ -179,7 +179,7 @@ class ClientUser extends User{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getBlocking(queryParameters){
+  getBlockingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","block.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
@@ -194,7 +194,7 @@ class ClientUser extends User{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getMuting(queryParameters){
+  getMutingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","mute.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
