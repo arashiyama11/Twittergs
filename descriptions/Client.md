@@ -7,7 +7,7 @@ const client=new Client({
   propety:Propeties,
   name:string,
   oauthVersion:string,
-  restTime:string||Function,
+  restTime:number||Function,
   id:string,
   CLIENT_ID:string,
   CLIENT_SECRET:string,
