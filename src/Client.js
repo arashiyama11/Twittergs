@@ -532,15 +532,15 @@ class AppOnlyClient{
   }
   /**
    * Bearerトークンを取得します
-   * @param {string} apiKey 
-   * @param {strnig} apiSecret 
+   * @param {string} API_KEY
+   * @param {strnig} API_SECRET 
    * @returns 
    */
-  static getBearerToken(apiKey=PropertiesService.getUserProperties().getProperty("API_KEY"),apiSecret=PropertiesService.getUserProperties().getProperty("API_SECRET")){
+  static getBearerToken(API_KEY=PropertiesService.getUserProperties().getProperty("API_KEY"),API_SECRET=PropertiesService.getUserProperties().getProperty("API_SECRET")){
     return JSON.parse(UrlFetchApp.fetch("https://api.twitter.com/oauth2/token",{    
       method: "POST",
       headers: {
-        "Authorization": "Basic " + Utilities.base64Encode(apiKey+":"+apiSecret)
+        "Authorization": "Basic " + Utilities.base64Encode(API_KEY+":"+API_SECRET)
       },
       contentType:"application/x-www-form-urlencoded;charset=UTF-8",
       payload: {
