@@ -1,29 +1,39 @@
 # User
 Twitterのアカウントを表すクラスです。
-
-# 構文
+# コンストラクター
+## 構文 
 ```js
 const user=new User(d,client)
 ```
-## 引数
-- ### d \<Object||string\>
+### 引数
+- #### d \<Object||string\>
     ユーザークラスを作成する元になるオブジェクトまたはツイートのIDです。
     オブジェクトが指定された場合はそのプロパティにidが含まれていなければなりません。
+    IDがなければインスタンスメゾットは使用できないので注意してください。
 
-- ### client \<Client\>
+- #### client \<Client\>
     そのツイートに対して操作を行うClientです
+## 例
+```js
+const user=new User("1234567890",client) 
+```
+```js
+const user=new User({
+  id:"1234567890",
+  useranme:"hogehoge"
+},client) 
+```
 
 # インスタンスメゾット
-## update(queryParameters)
+## update(queryParameters):Tweet
 そのユーザーの情報をアップデートします
-### エンドポイント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-id
 ### 引数 
 - #### queryParameters \<Object\>
-    クエリーパラメータです。
-有効な値は[TWITTER_API_DATA.queryParameters.user](../src/Util.js)にあります。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-id)を参照してください。
 ### 返り値
-アップデートされたそのUserオブジェクトです
+thisを返します。
 
 ### 例
 ```js
@@ -34,90 +44,110 @@ user.update({
 ```
 
 
-## getLiking(queryParameters)
+## getLikingTweets(queryParameters):Array<Tweet\>
 そのユーザーがいいねしているツイートを取得します
-### エンドポイント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-users-id-liked_tweets
 
 ### 引数
 - ### queryParameters \<Object\>
-  クエリーパラメータです
-有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
-### 返り値
-Tweetクラスの配列です。
-metaプロパティでmeta情報にアクセスできます。
+  [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-users-id-liked_tweets)を参照してください。
+### 返り値 <Array<Tweet\>\>
 
-### 例
-```js
-const twts=user.getLiking()
-Logger.log(twts)
-Logger.log(twts.meta)
-
-```
-
-## getTimeLine(queryParameters)
+## getTimeLine(queryParameters):Array<Tweet\>
 そのユーザーのタイムラインを取得します
-### エンドポイント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets
 
 
 ### 引数
 - #### queryParameters \<Object\>
     クエリーパラメータです
-有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
-### 返り値
-Tweetクラスの配列です。
-metaプロパティでmeta情報にアクセスできます。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets)を参照してください。
+### 返り値 <Array<TWeet\>\>
 
-### 例
-```js
-const twts=user.getTimeLine()
-Logger.log(twts)
-Logger.log(twts.meta)
-```
-
-
-## getMentioned(queryParameters)
+## getMentioned(queryParameters):<Array<Tweet\>\>
 そのユーザーにメンションがされているツイートを取得します
-### エンドポイント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-mentions
 
 ### 引数
 - #### queryParameters \<Object\>
-    クエリーパラメータです
-    有効な値は[TWITTER_API_DATA.queryParameters.tweet](../src/Util.js)にあります。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-mentions)
 ### 返り値
 Tweetクラスの配列です。
 metaプロパティでmeta情報にアクセスできます。
 
-### 例
-```js
-const twts=user.getTimeLine()
-Logger.log(twts)
-Logger.log(twts.meta)
-```
-
-## follow()
+## follow():Object
 そのユーザーをフォローします
-### エンドポイント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/post-users-source_user_id-following
-
 
 ### 引数
 引数はありません。
-### 返り値
-Objectです。成功した場合は以下のObjectが返されます。
-```js
+### 返り値 <Object\>
+成功した場合は以下のObjectが返されます。
+```json
 {
-  data: {
-    following:true,
-    pending_follow:false
+  "data": {
+    "following":true,
+    "pending_follow":false
   }
 }
 ```
 
-### 例
-```js
-Logger.log(user.follow())
-```
 
+## unfollow():Object
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/delete-users-source_id-following
+
+### 引数
+引数はありません。
+### 返り値 <Object\>
+成功した場合は以下のObjectが返されます。
+```json
+{
+  "data":{
+    "following":false
+  }
+}
+```
+## getFollowingUsers(queryParameters):Array<User\>
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following
+
+### 引数
+- #### queryParamters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following)を参照してください。
+### 返り値 <Array<Tweet\>\>
+
+
+## getAllFollowingUsers(queryParamters):Array<User\>
+全てのフォローしているユーザーを取得します。
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following
+
+
+### 引数
+- #### queryParameters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following)を参照してください。
+### 返り値 <Array<User\>\>
+
+## getFollowers(queryParameters):Array<User\>
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
+
+### 引数
+- #### queryParameters <Object\>
+[公式ドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers)を参照してください。
+### 返り値　Array<User\>
+
+## getAllFollowers(queryParameters):Array<User>
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
+
+### 引数
+- #### queryParameters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers)を参照してください。
+
+### 返り値 <Array<User\>\>
