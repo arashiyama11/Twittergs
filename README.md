@@ -25,10 +25,10 @@ client.getUserByUsername("sample").getFollowers()[0].follow()
 ```
 
 # インストール方法
-ライブラリとしてインストールをすると入力補完が上手く働かないので、[dist/twittergs.js](./dist/twittergs.js)をGoogleAppsScriptにコピペしてください。  
+ライブラリとしてインストールをすると入力補完が上手く働かないので、[dist/twittergs.js](./dist/twittergs.js)または[dist/no-toplevel-twittergs.js](./dist/no-toplevel-twittergs.js)をGoogleAppsScriptにコピペしてください。  
 
 ### 注意
-ライブラリのオブジェクト、クラスは全てトップレベルに宣言されることになります。  
+[dist/twittergs.js](./dist/twittergs.js)を使用すると、ライブラリのオブジェクト、クラスは全てトップレベルに宣言されることになります。  
 以下のリストと同名の宣言がされる場合不具合が発生することがあります。  
 - CLIENT
 - AppOnlyClient
@@ -40,6 +40,8 @@ client.getUserByUsername("sample").getFollowers()[0].follow()
 - Property
 - Util
 - TWITTER_API_DATA  
+
+これらが含まれる場合は[dist/no-toplevel-twittergs.js](./dist/no-toplevel-twittergs.js)を使用してください。
 
 
 # 説明
