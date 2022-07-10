@@ -31,7 +31,7 @@ class User{
    * @param {Object} queryParameters 
    * @returns {Tweet[]}
    */
-  getLiking(queryParameters){
+  getLikingTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
