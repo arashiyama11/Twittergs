@@ -104,7 +104,7 @@ class User{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getFollowing(queryParameters){
+  getFollowingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
@@ -117,7 +117,7 @@ class User{
    * @param {Object} queryParameters 
    * @returns 
    */
-  getAllFollowings(queryParameters={}){
+  getAllFollowingUsers(queryParameters={}){
     this.validate()
     let token=undefined
     const result=[]
@@ -150,8 +150,10 @@ class User{
 
   /**
    * 全てのフォロワーを取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
+   * 
    * @param {Object} queryParameters 
-   * @returns 
+   * @returns {User[]}
    */
   getAllFollowers(queryParameters={}){
     this.validate()
