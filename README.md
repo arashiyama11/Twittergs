@@ -11,17 +11,26 @@ GoogleAppsScriptで使えるTwitterAPIのラッパーライブラリです。
 # サンプル
 ```js
 const client=new Client({
-  name:"demo",
+  name:"sample",
   oauthVersion:"1.0a"
 })
 //ツイートする
 client.postTweet({text:"demo"})
 
-//検索してリツイートする
-client.searchTweets({q:"demo"})[0].retweet()
+//自身のタイムラインを取得する
+client.user.getTimeLine()
 
-//ユーザーを取得してそのフォロワーをフォローする
-client.getUserByUsername("sample").getFollowers()[0].follow()
+//ツイートの検索
+const tweets=client.searchTweets({q:"demo"})
+
+//ツイートをリツイート
+tweets[0].retweet()
+
+//ツイートの著者をフォロー
+tweets[1].author.follow()
+
+//ユーザーを取得してそのフォロワーのフォローしているユーザーをフォローする
+client.getUserByUsername("sample").getFollowers()[0].getFollowingUsers()[0].follow()
 ```
 
 # インストール方法
