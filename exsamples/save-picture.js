@@ -1,41 +1,22 @@
-//長いツイートを分割してツリーにして投稿
-function treeTweet(){
+function savePicture(){
+  const tweetId="123456"
+  const driveFolder=DriveApp.getFolderById("sample")
   const client=new Client({
     name:"sample",
     oauthVersion:"1.0a"
   })
-  const text="tree tweet\n".repeat(30)
-  const tweetTextSize=100
-  let i=0
-  let tweet
-  do{
-    const tweetText=text.substring(i*tweetTextSize,(i+1)*tweetTextSize)
-    if(tweet===undefined){
-      tweet=client.postTweet({text:tweetText})
-    }else{
-      tweet=tweet.reply({text:tweetText})
-    }
-    i++
-  }while(text[(i+1)*tweetTextSize]!==undefined)
-}
 
-//画像を投稿
-function tweetWithMedias(){
-  const client=new Client({
-    name:"sample",
-    oauthVersion:"1.0a"
-  })
-  const driveMediaIds=["12dfa","fadsf"]
-  const mediaBlobs=driveMediaIds.map(id=>DriveApp.getFileById(id).getBlob())
-  const mediaIds=mediaBlobs.map(blob=>client.uploadMedia(blob).media_id_string)
-  client.postTweet({
-    media:{
-      media_ids:mediaIds
-    }
+  const tweet=client.getTweetById(tweetId,{expansions:["attachments.media_keys"],"media.fields":["url"]})
+  const medias=tweet.subData?.includes?.media
+  if(medias===undefined)throw new Error("画像がありません")
+  medias.forEach(({url})=>{
+    if(!url)return
+    const blob=UrlFetchApp.fetch(url+":orig").getBlob()
+    const file=driveFolder.createFile(blob)
+    Logger.log(file.getUrl())
   })
 }
 
-//定期実行することを想定して保存済みのツイートIDを保存するためにPropertiesService.getUserProperties()にアクセスします。
 function saveRetweetPictures(){
   const driveFolder=DriveApp.getFolderById("f9fdww")
   const client=new Client({
