@@ -139,6 +139,34 @@ class Tweet{
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
   }
+  /**
+   * ブックマークします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @returns {Object}
+   */
+  bookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        tweet_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/delete-users-id-bookmarks-tweet_id
+   * @returns {Object}
+   */
+  deleteBookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks/${this.id}`,{
+      method:"DELETE",
+    })
+  }
 }
 
 

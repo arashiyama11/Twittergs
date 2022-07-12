@@ -7,7 +7,7 @@ class User{
   }
 
   validate(){
-    if(!this.clinet)throw new Error("clientがありません")
+    if(!this.client)throw new Error("clientがありません")
     if(!this.id)throw new Error("idがありません")
   }
   /**
@@ -201,5 +201,12 @@ class ClientUser extends User{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
     return Util.shapeData(response,v=>new User(v,this.client))
+  }
+
+  getBookMarkTweets(queryParameters){
+    this.validate()
+    this.client.validate(["2.0",["tweet.read","users.read","bookmark.read"]])
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{queryParameters})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
