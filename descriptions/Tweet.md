@@ -26,6 +26,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/ge
 ### 引数
 - #### queryParaemters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id)を参照してください。
+です
 ### 返り値 <Tweet\>
 アップデートされたthisを返します。
 
@@ -48,6 +49,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get
 ### 引数
 - #### queryParameters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users)を参照してください。
+です
 ### 返り値 <Array<User\>\>
 
 
@@ -59,6 +61,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 ### 引数
 - #### queryParameters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/get-tweets-id-retweeted_by)を参照してください。
+です
 ### 返り値 <Array<User\>\>
 
 
@@ -71,6 +74,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-refere
 ### 引数
 - #### queryParameters
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets)を参照してください。
+です
 ### 返り値 <Array<Tweet\>\>
 
 
@@ -128,7 +132,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 
 
 ## deleteRetweet():Object
-### 公式ドキュメント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/delete-users-id-retweets-tweet_id
 
 ### 引数
@@ -139,6 +143,39 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 {
   "data": {
     "retweeted": false
+  }
+}
+```
+
+## bookMark():Object
+ツイートにブックマークします
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+
+### 引数
+引数はありません。
+### 返り値 <Object\>
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "bookmarked": true
+  }
+}
+```
+
+## deleteBookMark():Object
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/delete-tweets-id
+
+### 引数
+引数はありません。
+### 返り値 <Object\>
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "bookmarked": false
   }
 }
 ```

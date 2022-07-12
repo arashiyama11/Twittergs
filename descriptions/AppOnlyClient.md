@@ -90,6 +90,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 取得したいユーザーのユーザーネームです
 - #### queryParameters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。
+です
 
 ### 戻り値 <User>
 

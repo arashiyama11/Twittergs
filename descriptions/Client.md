@@ -267,7 +267,7 @@ client.fetch(string,{
 2.0 https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 #### 引数 
 - ##### queryParameters <Object\> 
-    [1.0a](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets),[2.0](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。
+    [1.0a](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets),[2.0](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。  
 #### 返り値 Array<Tweet\>
   
 ### getTweetById(id,queryParameters):Tweet
@@ -280,7 +280,8 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
 - ##### id <string\>
     取得したいツイートのIDです。
 - ##### queryParameters <Object\>
-    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。
+    [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference)を参照してください。  
+    です
 #### 返り値 <Tweet\>
 
 ### getTweetByURL(url,queryParameters):Tweet
@@ -321,7 +322,8 @@ https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-referenc
 https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
 #### 引数
 - ##### queryParameters <Object\>
-[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search)を
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search)を参照してください。
+
 #### 返り値 <Array<User\>\>
 
 ### getUserByUsername(username,queryParameters):User
@@ -332,6 +334,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 取得したいユーザーのユーザネームです。
 - ##### queryParameters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
+です
 
 ### getMyUser(queryParameters):ClientUser
 認証したユーザーを取得します。  
