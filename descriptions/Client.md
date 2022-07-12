@@ -344,7 +344,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 #### 引数
 - ##### queryParameters
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me)を参照してください。
-です
+
 
 
 #### 返り値 <ClientUser\>
