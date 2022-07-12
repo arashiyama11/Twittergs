@@ -1,5 +1,5 @@
 class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
     if(!name)throw new Error("nameは必須です")
     this.name=name
@@ -27,10 +27,14 @@ class Client{
       this.apiSecret=API_SECRET
       this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
       this.oauthTokenSecret=ACCESS_TOKEN_SECRET||this.property.getProperty("oauth_token_secret")
-      id=id||this.property.getProperty("user_id")
     }
     this.restTime=restTime
-    if(id)this.user=new ClientUser(id,this)
+    const userId=this.property.getProperty("user_id")
+    if(this.hasAuthorized()&&!userId){
+      this.user=this.getMyUser()
+      this.property.setProperty("user_id",this.user.id)
+    }
+    else this.user=new ClientUser(userId,this)
   }
   /**
    * clientにそのスコープやバージョンが含まれているか検証します
@@ -282,9 +286,7 @@ class Client{
   searchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
       this.validate(["2.0"],["tweet.read","users.read"])
-      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-      })
+      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {queryParameters})
       return Util.shapeData(response,v=>new Tweet(v,this))
     }
     const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
@@ -299,9 +301,7 @@ class Client{
    */
   getTweetById(id,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this)
   }
   /**
@@ -366,12 +366,21 @@ class Client{
    */
   getUserByUsername(username,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new User(Util.mergeMeta(response),this)
   }
 
+  /**
+   * 自分自身のユーザーを取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+   * @param {Object} queryParameters
+   * @returns {ClientUser}
+   */
+  getMyUser(queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/me`,{queryParameters})
+    return new ClientUser(Util.mergeMeta(response),this)
+  }
 
   /**
    * 5MB未満のメディアをアップロードします
@@ -498,9 +507,7 @@ class AppOnlyClient{
    * @returns {Tweet[]}
    */
   searchTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
@@ -511,9 +518,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getTweetById(id,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
 
@@ -525,9 +530,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getUserByUsername(username,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
   /**
@@ -610,9 +613,7 @@ class Tweet{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
     Object.assign(this,result)
     return this
   }
@@ -643,9 +644,7 @@ class Tweet{
   getLikedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -657,9 +656,7 @@ class Tweet{
   getRetweetedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -671,9 +668,7 @@ class Tweet{
   getQuoteTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
@@ -729,6 +724,35 @@ class Tweet{
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
   }
+  /**
+   * ブックマークします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @returns {Object}
+   */
+  bookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        tweet_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * ブックマークを解除します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/delete-users-id-bookmarks-tweet_id
+   * @returns {Object}
+   */
+  deleteBookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks/${this.id}`,{
+      method:"DELETE",
+    })
+  }
 }
 
 
@@ -755,7 +779,7 @@ class User{
   }
 
   validate(){
-    if(!this.clinet)throw new Error("clientがありません")
+    if(!this.client)throw new Error("clientがありません")
     if(!this.id)throw new Error("idがありません")
   }
   /**
@@ -767,9 +791,7 @@ class User{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
     Object.assign(this,response)
     return this
   }
@@ -782,9 +804,7 @@ class User{
   getLikingTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
@@ -797,9 +817,7 @@ class User{
   getTimeLine(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
@@ -812,9 +830,7 @@ class User{
   getMentioned(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 
@@ -855,9 +871,7 @@ class User{
   getFollowingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -869,6 +883,7 @@ class User{
     this.validate()
     let token=undefined
     const result=[]
+    queryParameters.max_results=1000
     let data=this.getFollowing(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
@@ -907,6 +922,7 @@ class User{
     this.validate()
     let token=undefined
     const result=[]
+    queryParameters.max_results=1000
     let data=this.getFollowers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
@@ -930,9 +946,7 @@ class ClientUser extends User{
   getBlockingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","block.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
 
@@ -945,10 +959,21 @@ class ClientUser extends User{
   getMutingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","mute.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
+  }
+
+  /**
+   * ブックマークしたツイートを全て取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @param {Object} queryParameters 
+   * @returns 
+   */
+  getBookMarkTweets(queryParameters){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.read"])
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{queryParameters})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
 const TWITTER_API_DATA={
@@ -968,10 +993,6 @@ const TWITTER_API_DATA={
       "tweet.fields":["attachments", "author_id", "context_annotations", "conversation_id", "created_at", "entities", "geo", "id", "in_reply_to_user_id", "lang", "non_public_metrics", "public_metrics", "organic_metrics", "promoted_metrics", "possibly_sensitive", "referenced_tweets", "reply_settings", "source", "text", "withheld"],
       "user.fields":["created_at", "description", "entities", "id", "location", "name", "pinned_tweet_id", "profile_image_url", "protected", "public_metrics", "url", "username", "verified", "withheld"]
     }   
-  },
-  defaultQueryParameters:{
-    tweet:{expansions:["author_id"]},
-    user:{}
   }
 }
 

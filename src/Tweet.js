@@ -20,9 +20,7 @@ class Tweet{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
     Object.assign(this,result)
     return this
   }
@@ -53,9 +51,7 @@ class Tweet{
   getLikedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -67,9 +63,7 @@ class Tweet{
   getRetweetedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -81,9 +75,7 @@ class Tweet{
   getQuoteTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
@@ -138,6 +130,35 @@ class Tweet{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
+  }
+  /**
+   * ブックマークします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @returns {Object}
+   */
+  bookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        tweet_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * ブックマークを解除します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/delete-users-id-bookmarks-tweet_id
+   * @returns {Object}
+   */
+  deleteBookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks/${this.id}`,{
+      method:"DELETE",
+    })
   }
 }
 

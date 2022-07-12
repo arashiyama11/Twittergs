@@ -1,5 +1,5 @@
 class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
     if(!name)throw new Error("nameは必須です")
     this.name=name
@@ -27,10 +27,14 @@ class Client{
       this.apiSecret=API_SECRET
       this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
       this.oauthTokenSecret=ACCESS_TOKEN_SECRET||this.property.getProperty("oauth_token_secret")
-      id=id||this.property.getProperty("user_id")
     }
     this.restTime=restTime
-    if(id)this.user=new ClientUser(id,this)
+    const userId=this.property.getProperty("user_id")
+    if(this.hasAuthorized()&&!userId){
+      this.user=this.getMyUser()
+      this.property.setProperty("user_id",this.user.id)
+    }
+    else this.user=new ClientUser(userId,this)
   }
   /**
    * clientにそのスコープやバージョンが含まれているか検証します
@@ -282,9 +286,7 @@ class Client{
   searchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
       this.validate(["2.0"],["tweet.read","users.read"])
-      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-      })
+      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {queryParameters})
       return Util.shapeData(response,v=>new Tweet(v,this))
     }
     const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
@@ -299,9 +301,7 @@ class Client{
    */
   getTweetById(id,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this)
   }
   /**
@@ -366,12 +366,21 @@ class Client{
    */
   getUserByUsername(username,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new User(Util.mergeMeta(response),this)
   }
 
+  /**
+   * 自分自身のユーザーを取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+   * @param {Object} queryParameters
+   * @returns {ClientUser}
+   */
+  getMyUser(queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/me`,{queryParameters})
+    return new ClientUser(Util.mergeMeta(response),this)
+  }
 
   /**
    * 5MB未満のメディアをアップロードします
@@ -498,9 +507,7 @@ class AppOnlyClient{
    * @returns {Tweet[]}
    */
   searchTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
@@ -511,9 +518,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getTweetById(id,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
 
@@ -525,9 +530,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getUserByUsername(username,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
   /**
