@@ -1,5 +1,5 @@
 class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
     if(!name)throw new Error("nameは必須です")
     this.name=name
@@ -27,10 +27,14 @@ class Client{
       this.apiSecret=API_SECRET
       this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
       this.oauthTokenSecret=ACCESS_TOKEN_SECRET||this.property.getProperty("oauth_token_secret")
-      id=id||this.property.getProperty("user_id")
     }
     this.restTime=restTime
-    if(id)this.user=new ClientUser(id,this)
+    const userId=this.property.getProperty("user_id")
+    if(this.hasAuthorized()&&!userId){
+      this.user=this.getMyUser()
+      this.property.setProperty("user_id",this.user.id)
+    }
+    else this.user=new ClientUser(userId,this)
   }
   /**
    * clientにそのスコープやバージョンが含まれているか検証します
@@ -372,6 +376,17 @@ class Client{
     return new User(Util.mergeMeta(response),this)
   }
 
+  /**
+   * 自分自身のユーザーを取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+   * @param {Object} queryParameters
+   * @returns {ClientUser}
+   */
+  getMyUser(queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/me`,{queryParameters})
+    return new ClientUser(Util.mergeMeta(response),this)
+  }
 
   /**
    * 5MB未満のメディアをアップロードします
@@ -729,6 +744,35 @@ class Tweet{
     this.client.validate(["1.0a","2.0"],["tweet.read","tweet.write","users.read"])
     return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/retweets/${this.id}`,{method:"DELETE"})
   }
+  /**
+   * ブックマークします
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @returns {Object}
+   */
+  bookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        tweet_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * ブックマークを解除します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/delete-users-id-bookmarks-tweet_id
+   * @returns {Object}
+   */
+  deleteBookMark(){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.write"])
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks/${this.id}`,{
+      method:"DELETE",
+    })
+  }
 }
 
 
@@ -755,7 +799,7 @@ class User{
   }
 
   validate(){
-    if(!this.clinet)throw new Error("clientがありません")
+    if(!this.client)throw new Error("clientがありません")
     if(!this.id)throw new Error("idがありません")
   }
   /**
@@ -949,6 +993,19 @@ class ClientUser extends User{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
     return Util.shapeData(response,v=>new User(v,this.client))
+  }
+
+  /**
+   * ブックマークしたツイートを全て取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @param {Object} queryParameters 
+   * @returns 
+   */
+  getBookMarkTweets(queryParameters){
+    this.validate()
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.read"])
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{queryParameters})
+    return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
 const TWITTER_API_DATA={
