@@ -20,9 +20,7 @@ class Tweet{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
     Object.assign(this,result)
     return this
   }
@@ -53,9 +51,7 @@ class Tweet{
   getLikedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -67,9 +63,7 @@ class Tweet{
   getRetweetedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
   /**
@@ -81,9 +75,7 @@ class Tweet{
   getQuoteTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**

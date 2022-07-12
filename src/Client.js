@@ -286,9 +286,7 @@ class Client{
   searchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
       this.validate(["2.0"],["tweet.read","users.read"])
-      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-      })
+      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {queryParameters})
       return Util.shapeData(response,v=>new Tweet(v,this))
     }
     const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
@@ -303,9 +301,7 @@ class Client{
    */
   getTweetById(id,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this)
   }
   /**
@@ -370,9 +366,7 @@ class Client{
    */
   getUserByUsername(username,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new User(Util.mergeMeta(response),this)
   }
 
@@ -513,9 +507,7 @@ class AppOnlyClient{
    * @returns {Tweet[]}
    */
   searchTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
   /**
@@ -526,9 +518,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getTweetById(id,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
 
@@ -540,9 +530,7 @@ class AppOnlyClient{
    * @returns {Tweet}
    */
   getUserByUsername(username,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new Tweet(Util.mergeMeta(response),this.client)
   }
   /**
