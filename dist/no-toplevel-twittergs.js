@@ -288,9 +288,7 @@ Twittergs.Client=class{
   searchTweets(queryParameters){
     if(this.oauthVersion==="2.0"){
       this.validate(["2.0"],["tweet.read","users.read"])
-      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {
-        queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-      })
+      let response = this.fetch("https://api.twitter.com/2/tweets/search/recent", {queryParameters})
       return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this))
     }
     const response=this.fetch("https://api.twitter.com/1.1/search/tweets.json",{queryParameters})
@@ -305,9 +303,7 @@ Twittergs.Client=class{
    */
   getTweetById(id,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Twittergs.Tweet(Twittergs.Util.mergeMeta(response),this)
   }
   /**
@@ -372,9 +368,7 @@ Twittergs.Client=class{
    */
   getUserByUsername(username,queryParameters){
     this.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new Twittergs.User(Twittergs.Util.mergeMeta(response),this)
   }
 
@@ -515,9 +509,7 @@ Twittergs.AppOnlyClient=class{
    * @returns {Tweet[]}
    */
   searchTweets(queryParameters){
-    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch("https://api.twitter.com/2/tweets/search/recent",{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
   /**
@@ -528,9 +520,7 @@ Twittergs.AppOnlyClient=class{
    * @returns {Tweet}
    */
   getTweetById(id,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.fetch(`https://api.twitter.com/2/tweets/${id}`,{queryParameters})
     return new Twittergs.Tweet(Twittergs.Util.mergeMeta(response),this.client)
   }
 
@@ -542,9 +532,7 @@ Twittergs.AppOnlyClient=class{
    * @returns {Tweet}
    */
   getUserByUsername(username,queryParameters){
-    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.fetch(`https://api.twitter.com/2/users/by/username/${username}`,{queryParameters})
     return new Twittergs.Tweet(Twittergs.Util.mergeMeta(response),this.client)
   }
   /**
@@ -627,9 +615,7 @@ Twittergs.Tweet=class{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
     Object.assign(this,result)
     return this
   }
@@ -660,9 +646,7 @@ Twittergs.Tweet=class{
   getLikedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
   /**
@@ -674,9 +658,7 @@ Twittergs.Tweet=class{
   getRetweetedUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
   /**
@@ -688,9 +670,7 @@ Twittergs.Tweet=class{
   getQuoteTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/quote_tweets`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
   /**
@@ -813,9 +793,7 @@ Twittergs.User=class{
   update(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
     Object.assign(this,response)
     return this
   }
@@ -828,9 +806,7 @@ Twittergs.User=class{
   getLikingTweets(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","like.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/liked_tweets`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
 
@@ -843,9 +819,7 @@ Twittergs.User=class{
   getTimeLine(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/tweets`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
 
@@ -858,9 +832,7 @@ Twittergs.User=class{
   getMentioned(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.tweet
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/mentions`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
 
@@ -901,9 +873,7 @@ Twittergs.User=class{
   getFollowingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","follows.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/following`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
   /**
@@ -915,6 +885,7 @@ Twittergs.User=class{
     this.validate()
     let token=undefined
     const result=[]
+    queryParameters.max_results=1000
     let data=this.getFollowing(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
@@ -953,6 +924,7 @@ Twittergs.User=class{
     this.validate()
     let token=undefined
     const result=[]
+    queryParameters.max_results=1000
     let data=this.getFollowers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
@@ -976,9 +948,7 @@ Twittergs.ClientUser=class extends Twittergs.User{
   getBlockingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","block.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/blocking`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
 
@@ -991,9 +961,7 @@ Twittergs.ClientUser=class extends Twittergs.User{
   getMutingUsers(queryParameters){
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read","mute.read"])
-    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{
-      queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
-    })
+    let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/muting`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
 
@@ -1027,10 +995,6 @@ Twittergs.TWITTER_API_DATA={
       "tweet.fields":["attachments", "author_id", "context_annotations", "conversation_id", "created_at", "entities", "geo", "id", "in_reply_to_user_id", "lang", "non_public_metrics", "public_metrics", "organic_metrics", "promoted_metrics", "possibly_sensitive", "referenced_tweets", "reply_settings", "source", "text", "withheld"],
       "user.fields":["created_at", "description", "entities", "id", "location", "name", "pinned_tweet_id", "profile_image_url", "protected", "public_metrics", "url", "username", "verified", "withheld"]
     }   
-  },
-  defaultQueryParameters:{
-    tweet:{expansions:["author_id"]},
-    user:{}
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "twittergs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GoogleAppsScriptで使えるTwitterAPIのラッパーライブラリです。",
   "scripts": {
     "auth": "clasp login --creds creds.json",
