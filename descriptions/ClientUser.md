@@ -26,3 +26,10 @@ https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-
 - #### getMutingUsers <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-users-muting)を参照してください。
 ### 返り値 Array<User\>
+
+## getBookMarkTweets(queryParameters):Object
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+### 引数
+- #### queryParameters <Object\>
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks)を参照してください。

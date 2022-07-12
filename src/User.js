@@ -203,9 +203,15 @@ class ClientUser extends User{
     return Util.shapeData(response,v=>new User(v,this.client))
   }
 
+  /**
+   * ブックマークしたツイートを全て取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+   * @param {Object} queryParameters 
+   * @returns 
+   */
   getBookMarkTweets(queryParameters){
     this.validate()
-    this.client.validate(["2.0",["tweet.read","users.read","bookmark.read"]])
+    this.client.validate(["2.0"],["tweet.read","users.read","bookmark.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/bookmarks`,{queryParameters})
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }

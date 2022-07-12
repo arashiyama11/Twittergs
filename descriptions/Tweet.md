@@ -128,7 +128,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 
 
 ## deleteRetweet():Object
-### 公式ドキュメント
+### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/delete-users-id-retweets-tweet_id
 
 ### 引数
@@ -139,6 +139,39 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 {
   "data": {
     "retweeted": false
+  }
+}
+```
+
+## bookMark():Object
+ツイートにブックマークします
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
+
+### 引数
+引数はありません。
+### 返り値 <Object\>
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "bookmarked": true
+  }
+}
+```
+
+## deleteBookMark():Object
+### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/delete-tweets-id
+
+### 引数
+引数はありません。
+### 返り値 <Object\>
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "bookmarked": false
   }
 }
 ```

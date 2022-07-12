@@ -157,6 +157,7 @@ class Tweet{
   }
   
   /**
+   * ブックマークを解除します
    * https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/delete-users-id-bookmarks-tweet_id
    * @returns {Object}
    */
