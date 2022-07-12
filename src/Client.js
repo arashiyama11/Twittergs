@@ -1,5 +1,5 @@
 class Client{
-  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,id,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
+  constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
     if(!name)throw new Error("nameは必須です")
     this.name=name
@@ -27,10 +27,11 @@ class Client{
       this.apiSecret=API_SECRET
       this.oauthToken=ACCESS_TOKEN||this.property.getProperty("oauth_token")
       this.oauthTokenSecret=ACCESS_TOKEN_SECRET||this.property.getProperty("oauth_token_secret")
-      id=id||this.property.getProperty("user_id")
     }
     this.restTime=restTime
-    if(id)this.user=new ClientUser(id,this)
+    const userId=this.property.getProperty("user_id")
+    if(!userId)this.user=this.getMyUser()
+    else this.user=new ClientUser(userId,this)
   }
   /**
    * clientにそのスコープやバージョンが含まれているか検証します
@@ -372,6 +373,17 @@ class Client{
     return new User(Util.mergeMeta(response),this)
   }
 
+  /**
+   * 自分自身のユーザーを取得します。
+   * https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+   * @param {Object} queryParameters
+   * @returns {ClientUser}
+   */
+  getMyUser(queryParameters){
+    this.validate(["1.0a","2.0"],["tweet.read","users.read"])
+    let response=this.fetch(`https://api.twitter.com/2/users/me`,{queryParameters})
+    return new ClientUser(Util.mergeMeta(response),this)
+  }
 
   /**
    * 5MB未満のメディアをアップロードします

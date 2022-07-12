@@ -8,7 +8,6 @@ const client=new Client({
   name:string,
   oauthVersion:string,
   restTime:number||Function,
-  id:string,
   CLIENT_ID:string,
   CLIENT_SECRET:string,
   API_KEY:string,
@@ -33,13 +32,6 @@ const client=new Client({
     fetchする際の`Utilities.sleep`する時間(ms)を指定します。
     Functionが与えられた場合はそれを実行して得られた時間だけ`Utilities.sleep`します。  
     デフォルト1000です。
-
-- ### id \<string\>
-    TwitterのユーザーIDを表します。
-    1.0aで認証されている場合はデフォルトでその認証されたユーザーのIDが指定されるので、その場合は指定する必要はありません。  
-    2.0の場合は手動で明示的にidを指定してください。  
-    idが指定されない場合は`client.user`にアクセスすることができません。
-
 
 - ### CLIENT_ID \<string\>
     OAuth2.0を用いて認証する場合は必須です。
@@ -80,7 +72,6 @@ const client=new Client({
 const client=new Client({
   name:"sample",
   oauthVersion:"2.0",
-  id:"1234567890",
   CLIENT_ID:CLIENT_ID,
   CLIENT_SECRET:CLIENT_SECRET
 })
@@ -97,7 +88,7 @@ const client=new Client({
 
 # プロパティ
 ## clinet.user <ClientUser\>
-認証したユーザーを表す[ClientUser](./ClientUser.md)オブジェクトです。
+認証したユーザーを表す[ClientUser](./ClientUser.md)オブジェクトです。  
 
 # 静的メゾット
 ## static fromCallBackEvent(options):Client
@@ -342,7 +333,17 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 - ##### queryParameters <Object\>
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
 
-#### 返り値 <User\>
+### getMyUser(queryParameters):ClientUser
+認証したユーザーを取得します。  
+#### Twitterドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+
+#### 引数
+- ##### queryParameters
+[Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me)を参照してください。
+
+
+#### 返り値 <ClientUser\>
 
 ### uploadMedia(blob):Object
 画像をアップロードします。5MB未満専用です。
