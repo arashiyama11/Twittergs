@@ -25,7 +25,7 @@ const user=new User({
 ```
 
 # インスタンスメゾット
-## update(queryParameters):Tweet
+## update(queryParamters:Object):Tweet
 そのユーザーの情報をアップデートします
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-id
@@ -44,7 +44,7 @@ user.update({
 ```
 
 
-## getLikingTweets(queryParameters):Array<Tweet\>
+## getLikingTweets(queryParamters:Object):Array<Tweet\>
 そのユーザーがいいねしているツイートを取得します
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-users-id-liked_tweets
@@ -54,7 +54,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get
   [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-users-id-liked_tweets)を参照してください。
 ### 返り値 <Array<Tweet\>\>
 
-## getTimeLine(queryParameters):Array<Tweet\>
+## getTimeLine(queryParamters:Object):Array<Tweet\>
 そのユーザーのタイムラインを取得します
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets
@@ -66,7 +66,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference
     [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-tweets)を参照してください。
 ### 返り値 <Array<TWeet\>\>
 
-## getMentioned(queryParameters):<Array<Tweet\>\>
+## getMentioned(queryParamters:Object):<Array<Tweet\>\>
 そのユーザーにメンションがされているツイートを取得します
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/timelines/api-reference/get-users-id-mentions
@@ -112,7 +112,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/de
   }
 }
 ```
-## getFollowingUsers(queryParameters):Array<User\>
+## getFollowingUsers(queryParamters:Object):Array<User\>
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following
 
@@ -133,7 +133,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/ge
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-following)を参照してください。
 ### 返り値 <Array<User\>\>
 
-## getFollowers(queryParameters):Array<User\>
+## getFollowers(queryParamters:Object):Array<User\>
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
 
@@ -142,7 +142,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/ge
 [公式ドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers)を参照してください。
 ### 返り値　Array<User\>
 
-## getAllFollowers(queryParameters):Array<User>
+## getAllFollowers(queryParamters:Object):Array<User>
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers
 

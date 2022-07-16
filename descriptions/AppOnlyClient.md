@@ -9,7 +9,7 @@ const app=new AppOnlyClient(BEARER_TOKEN)
 ベアラートークンです。  
 デフォルトは`PropertiesService.getUserProperties().getProperty("BEARER_TOKEN")`です。
 
-## fetch(url,options):Object
+## fetch(url:string,options:Object):Object
 ### 構文
 ```js
 app.fetch(string,{
@@ -50,7 +50,7 @@ app.fetch(string,{
 - ### 戻り値 <Object\>
 レスポンスのオブジェクトです。
 
-## setClient(client) :AppOnlyClient
+## setClient(client:Client) :AppOnlyClient
 appのインスタンスメゾットの返り値の`Tweet`や`User`を操作する`Client`を設定します。
 ### 構文
 ```js
@@ -61,7 +61,7 @@ app.setClient(Client)
 ### 戻り値 <AppOnlyClient\>
 thisを返します。
 
-## searchTweets(queryParameters):Array<Tweet\>
+## searchTweets(queryParameters:Object):Array<Tweet\>
 ツイートを検索します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
@@ -71,7 +71,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/ge
 
 ### 戻り値 <Array<Tweet\>\>
 
-## getTweetById(id,queryParameters):Tweet
+## getTweetById(id:string,queryParameters:Object):Tweet
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
 ### 引数
@@ -82,7 +82,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/ge
 
 ### 戻り値 <Tweet>
 
-## getUserByUsername:User
+## getUserByUsername(username:string,queryParameters:Object):User
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
 ### 引数
@@ -94,7 +94,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 
 ### 戻り値 <User>
 
-## static getBearerToken(API_KEY,API_SECRET):string
+## static getBearerToken(API_KEY:string,API_SECRET:string):string
 ベアラートークンを取得します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/authentication/api-reference/token
