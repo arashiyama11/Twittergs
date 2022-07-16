@@ -7,7 +7,7 @@ const client=new Client({
   propety:Propeties,
   name:string,
   oauthVersion:string,
-  restTime:number||Function,
+  restTime:number|Function,
   CLIENT_ID:string,
   CLIENT_SECRET:string,
   API_KEY:string,
@@ -28,7 +28,7 @@ const client=new Client({
     使用するOAuthのバージョンを選択肢します。
     利用可能なのは`1.0a`と`2.0`の二つのみ利用できます。
 
-- ### restTime <number||Function>
+- ### restTime <number|Function>
     fetchする際の`Utilities.sleep`する時間(ms)を指定します。
     Functionが与えられた場合はそれを実行して得られた時間だけ`Utilities.sleep`します。  
     デフォルト1000です。
@@ -91,7 +91,7 @@ const client=new Client({
 認証したユーザーを表す[ClientUser](./ClientUser.md)オブジェクトです。  
 
 # 静的メゾット
-## static fromCallBackEvent(options):Client
+## static fromCallBackEvent(options:Object):Client
 認証のコールバックイベントの引数からClientを作成します。
 ### 構文
 ```js
@@ -128,7 +128,7 @@ Client.fromCallBackEvent({
 
 ### 返り値 <Client\>
 
-## static getAuthorizedUsers(property):Array<Array<string\>\>
+## static getAuthorizedUsers(property:Properties):Array<Array<string\>\>
 与えられた`property`に認証されているユーザーを返します
 ### 引数
 - #### property <Properties>
@@ -144,7 +144,7 @@ Client.fromCallBackEvent({
 ]
 ```
 
-## static refreshAll(options):void
+## static refreshAll(options:Object):void
 ### 構文  
 ```js
 Client.refreshAll({
@@ -166,7 +166,7 @@ Client.refreshAll({
 返り値はありません。
 # インスタンスメゾット
 ## 認証関連
-### validate(oauthVersion,scope):void
+### validate(oauthVersion:Array<string>,scope:Array<string>):void
 clinetが認証済みで、oauthVersionとscopeを持っているか検証します。持っていない場合はエラーが投げられます。
 #### 構文
 ```js
@@ -180,7 +180,7 @@ client.validate(Array<string>,Array<string>)
     配列の要素はTWITTER_API_DATA.scopesにあるもののみ有効です。  
     この引数に含まれているが、clinetに含まれていない場合はエラーが投げられます。 
 
-### authorize(scopes):string
+### authorize(scopes:Array<string>):string
 clinetの認証URLを返します。  
 もしclinet.nameが`@auto`の場合はTwitterのユーザーネームとして認証されます。  
 #### 引数
@@ -192,7 +192,7 @@ clinet.oauthVersionが`1.0a`の場合は指定する必要はありません。
 #### 返り値 <string\>
 認証URLです。
 
-### isAuthorized(e):boolean
+### isAuthorized(e:Object):boolean
 コールバックのイベントから認証がされているか検証します。
 #### 引数
 - ##### e <Object\>
@@ -216,7 +216,7 @@ clientが認証されたかを返します
 clientが過去に認証されたかどうかを返します。
 
 ## Twitter操作関連
-### fetch(url,options):Object
+### fetch(url:string,options:Object):Object
 認証情報を乗せてHTTP通信します。  
 optionsのほとんどはUrlFetchApp.fetchの第二引数と同じです。
 ### 構文
@@ -261,7 +261,7 @@ client.fetch(string,{
 
 #### 返り値 <Object\>           
 レスポンスのオブジェクトです。
-### searchTweets(queryParameters):Array<Tweet\>
+### searchTweets(queryParamters:Object):Array<Tweet\>
 #### Twitterドキュメント
 1.0a https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets  
 2.0 https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
@@ -270,7 +270,7 @@ client.fetch(string,{
     [1.0a](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets),[2.0](https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent)を参照してください。  
 #### 返り値 Array<Tweet\>
   
-### getTweetById(id,queryParameters):Tweet
+### getTweetById(id,queryParamters:Object):Tweet
 ツイートIDからツイートを取得します。
 もし、単純にTweetクラスのインスタンスメゾットが使用したいだけの場合はTweetコンストラクタの使用をご検討ください。
 
@@ -284,7 +284,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
     です
 #### 返り値 <Tweet\>
 
-### getTweetByURL(url,queryParameters):Tweet
+### getTweetByURL(url,queryParamters:Object):Tweet
 URLからツイートを取得します。
 #### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference
@@ -305,7 +305,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-refer
 #### 返り値 <ClientTweet\>
 投稿したツイートです。
 
-### getListById(id,queryParameters):List
+### getListById(id,queryParamters:Object):List
 IDからリストを取得します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-reference/get-lists-id-tweets
@@ -317,7 +317,7 @@ https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-referenc
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/lists/list-tweets/api-reference/get-lists-id-tweets)を参照してください。
 #### 返り値　<List\>
 
-### searchUsers(queryParameters):Array<User\>
+### searchUsers(queryParamters:Object):Array<User\>
 #### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-search-get-users/api-reference/get-users-search
 #### 引数
@@ -326,7 +326,7 @@ https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/follow-s
 
 #### 返り値 <Array<User\>\>
 
-### getUserByUsername(username,queryParameters):User
+### getUserByUsername(username,queryParamters:Object):User
 #### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username
 #### 引数
@@ -336,7 +336,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-by-username-username)を参照してください。  
 です
 
-### getMyUser(queryParameters):ClientUser
+### getMyUser(queryParamters:Object):ClientUser
 認証したユーザーを取得します。  
 #### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me

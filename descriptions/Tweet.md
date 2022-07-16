@@ -19,7 +19,7 @@ const tweet=new Tweet(d,client)
 ## tweet.author
 ツイートの著者の[User](./User.md)オブジェクトです。
 # インスタンスメゾット
-## update(queryParameters):Tweet
+## update(queryParamters:Object):Tweet
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets-id
 
@@ -41,7 +41,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-refer
 投稿したリプライです
 
 
-## getLikedUsers(queryParameters):Array<User\>
+## getLikedUsers(queryParamters:Object):Array<User\>
 ツイートにいいねしたユーザーを返します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
@@ -53,7 +53,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get
 ### 返り値 <Array<User\>\>
 
 
-## getRetweetedUsers(queryParameters):Array<User\>
+## getRetweetedUsers(queryParamters:Object):Array<User\>
 ツイートをリツイートしたユーザーを返します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/get-tweets-id-retweeted_by
@@ -66,7 +66,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/
 
 
 
-## getQuoteTweets(queryParameters):Array<Tweet\>
+## getQuoteTweets(queryParamters:Object):Array<Tweet\>
 引用ツイートを取得します。
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets
@@ -87,7 +87,7 @@ https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/pos
 引数はありません。
 ### 返り値 <Object\>
 成功すると以下のオブジェクトが返されます。
-```js
+```json
 {
   "data": {
     "liked": true

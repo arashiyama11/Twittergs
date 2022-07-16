@@ -9,7 +9,7 @@ client.user
 
 # インスタンスメゾット
 [User](./User.md)のインスタンスメゾットの他に以下のインスタンスメゾットを持っています
-## getBlockingUsers(queryParameters):Array<User\>
+## getBlockingUsers(queryParamters:Object):Array<User\>
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/get-users-blocking
 
@@ -20,7 +20,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/get
 
 ### 返り値 Array<User\>
 
-## getMutingUsers(queryParameters):Array<User\>
+## getMutingUsers(queryParamters:Object):Array<User\>
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-users-muting
 
@@ -30,7 +30,7 @@ https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/get-
 です
 ### 返り値 Array<User\>
 
-## getBookMarkTweets(queryParameters):Object
+## getBookMarkTweets(queryParamters:Object):Object
 ### Twitterドキュメント
 https://developer.twitter.com/en/docs/twitter-api/tweets/bookmarks/api-reference/get-users-id-bookmarks
 ### 引数
