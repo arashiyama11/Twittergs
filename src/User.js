@@ -4,6 +4,7 @@ class User{
     else Object.assign(this,d)
     this.__proto__.client=client
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
+    this.dm=new DirectMessage(this)
   }
 
   validate(){
@@ -204,3 +205,52 @@ class ClientUser extends User{
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
+
+
+class DirectMessage{
+  /**
+   * @param {User} user
+   */
+  constructor(user){
+    user.client.validate(["1.0a"])
+    this.user=user
+  }
+  /**
+   * ユーザーにDMを送信します
+   * @param {Object} messageData 
+   * @returns {Object}
+   */
+  send(messageData){
+    const response=this.user.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        event:{
+          type:"message_create",
+          message_create:{
+            target:{
+              recipient_id:this.user.id
+            },
+            message_data:messageData
+          }
+        }
+      })
+    })
+    
+    return response
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
