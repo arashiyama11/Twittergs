@@ -1,8 +1,8 @@
 class Client{
   constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
-    if(!name)throw new Error("nameは必須です")
-    this.name=name
+    if(!ACCESS_TOKEN&&!name)throw new Error("nameは必須です")
+    this.name=name||ACCESS_TOKEN
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
