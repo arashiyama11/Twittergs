@@ -3,8 +3,8 @@ const Twittergs={}
 Twittergs.Client=class{
   constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
-    if(!name)throw new Error("nameは必須です")
-    this.name=name
+    if(!ACCESS_TOKEN&&!name)throw new Error("nameは必須です")
+    this.name=name||ACCESS_TOKEN
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
@@ -616,7 +616,7 @@ Twittergs.Tweet=class{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
-    Object.assign(this,result)
+    Object.assign(this,Twittergs.Util.mergeMeta(result))
     return this
   }
   /**
@@ -778,6 +778,7 @@ Twittergs.User=class{
     else Object.assign(this,d)
     this.__proto__.client=client
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
+    this.dm=new DirectMessage(this)
   }
 
   validate(){
@@ -794,7 +795,7 @@ Twittergs.User=class{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
-    Object.assign(this,response)
+    Object.assign(this,Twittergs.Util.mergeMeta(response))
     return this
   }
   /**
@@ -886,12 +887,12 @@ Twittergs.User=class{
     let token=undefined
     const result=[]
     queryParameters.max_results=1000
-    let data=this.getFollowing(queryParameters)
+    let data=this.getFollowingUsers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowingUsers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -910,7 +911,7 @@ Twittergs.User=class{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Twittergs.Util.margeMeta({data:response.data.map(v=>new Twittergs.User(v,this.client)),meta:response.meta})
+    return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this))
   }
 
   /**
@@ -930,7 +931,7 @@ Twittergs.User=class{
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -978,6 +979,56 @@ Twittergs.ClientUser=class extends Twittergs.User{
     return Twittergs.Util.shapeData(response,v=>new Twittergs.Tweet(v,this.client))
   }
 }
+
+
+Twittergs.DirectMessage=class{
+  /**
+   * @param {User} user
+   */
+  constructor(user){
+    user.client.validate(["1.0a"])
+    this.user=user
+  }
+  /**
+   * ユーザーにDMを送信します
+   * @param {Object} messageData 
+   * @returns {Object}
+   */
+  send(messageData){
+    const response=this.user.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        event:{
+          type:"message_create",
+          message_create:{
+            target:{
+              recipient_id:this.user.id
+            },
+            message_data:messageData
+          }
+        }
+      })
+    })
+    
+    return response
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Twittergs.TWITTER_API_DATA={
   scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],

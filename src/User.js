@@ -4,6 +4,7 @@ class User{
     else Object.assign(this,d)
     this.__proto__.client=client
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
+    this.dm=new DirectMessage(this)
   }
 
   validate(){
@@ -20,7 +21,7 @@ class User{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
-    Object.assign(this,response)
+    Object.assign(this,Util.mergeMeta(response))
     return this
   }
   /**
@@ -112,12 +113,12 @@ class User{
     let token=undefined
     const result=[]
     queryParameters.max_results=1000
-    let data=this.getFollowing(queryParameters)
+    let data=this.getFollowingUsers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowingUsers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -136,7 +137,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this))
   }
 
   /**
@@ -156,7 +157,7 @@ class User{
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -204,3 +205,52 @@ class ClientUser extends User{
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
+
+
+class DirectMessage{
+  /**
+   * @param {User} user
+   */
+  constructor(user){
+    user.client.validate(["1.0a"])
+    this.user=user
+  }
+  /**
+   * ユーザーにDMを送信します
+   * @param {Object} messageData 
+   * @returns {Object}
+   */
+  send(messageData){
+    const response=this.user.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        event:{
+          type:"message_create",
+          message_create:{
+            target:{
+              recipient_id:this.user.id
+            },
+            message_data:messageData
+          }
+        }
+      })
+    })
+    
+    return response
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
