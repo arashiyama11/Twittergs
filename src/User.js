@@ -137,7 +137,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.mergeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
   }
 
   /**
@@ -157,7 +157,7 @@ class User{
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
