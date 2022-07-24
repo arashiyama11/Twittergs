@@ -113,12 +113,12 @@ class User{
     let token=undefined
     const result=[]
     queryParameters.max_results=1000
-    let data=this.getFollowing(queryParameters)
+    let data=this.getFollowingUsers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowingUsers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
