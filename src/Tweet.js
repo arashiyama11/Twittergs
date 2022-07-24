@@ -21,7 +21,7 @@ class Tweet{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
-    Object.assign(this,result)
+    Object.assign(this,Util.mergeMeta(result))
     return this
   }
   /**

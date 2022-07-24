@@ -21,7 +21,7 @@ class User{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
-    Object.assign(this,response)
+    Object.assign(this,Util.mergeMeta(response))
     return this
   }
   /**
@@ -137,7 +137,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.mergeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this))
   }
 
   /**
