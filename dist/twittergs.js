@@ -1,8 +1,8 @@
 class Client{
   constructor({property=PropertiesService.getUserProperties(),CLIENT_ID=property.getProperty("CLIENT_ID"),CLIENT_SECRET=property.getProperty("CLIENT_SECRET"),API_KEY=property.getProperty("API_KEY"),API_SECRET=property.getProperty("API_SECRET"),name,oauthVersion,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,restTime=1000}={}){
     if(!oauthVersion)throw new Error("oauthVersionは必須です")
-    if(!name)throw new Error("nameは必須です")
-    this.name=name
+    if(!ACCESS_TOKEN&&!name)throw new Error("nameは必須です")
+    this.name=name||ACCESS_TOKEN
     if(oauthVersion==="2.0"){
       this.oauthVersion="2.0"
     }else if(oauthVersion==="1.0a"){
@@ -614,7 +614,7 @@ class Tweet{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let result=this.client.fetch("https://api.twitter.com/2/tweets/"+this.id,{queryParameters})
-    Object.assign(this,result)
+    Object.assign(this,Util.mergeMeta(result))
     return this
   }
   /**
@@ -776,6 +776,7 @@ class User{
     else Object.assign(this,d)
     this.__proto__.client=client
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
+    this.dm=new DirectMessage(this)
   }
 
   validate(){
@@ -792,7 +793,7 @@ class User{
     this.validate()
     this.client.validate(["1.0a","2.0"],["tweet.read","users.read"])
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}`,{queryParameters})
-    Object.assign(this,response)
+    Object.assign(this,Util.mergeMeta(response))
     return this
   }
   /**
@@ -884,12 +885,12 @@ class User{
     let token=undefined
     const result=[]
     queryParameters.max_results=1000
-    let data=this.getFollowing(queryParameters)
+    let data=this.getFollowingUsers(queryParameters)
     if(data.subData.meta.result_count===0)return data
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowingUsers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -908,7 +909,7 @@ class User{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Util.margeMeta({data:response.data.map(v=>new User(v,this.client)),meta:response.meta})
+    return Util.shapeData(response,v=>new User(v,this))
   }
 
   /**
@@ -928,7 +929,7 @@ class User{
     token=data.subData.meta.next_token
     result.push(...data)
     while(token){
-      data=this.getFollowing({pagination_token:token,...queryParameters})
+      data=this.getFollowers({pagination_token:token,...queryParameters})
       token=data.subData.meta.next_token
       result.push(...data)
     }
@@ -976,6 +977,56 @@ class ClientUser extends User{
     return Util.shapeData(response,v=>new Tweet(v,this.client))
   }
 }
+
+
+class DirectMessage{
+  /**
+   * @param {User} user
+   */
+  constructor(user){
+    user.client.validate(["1.0a"])
+    this.user=user
+  }
+  /**
+   * ユーザーにDMを送信します
+   * @param {Object} messageData 
+   * @returns {Object}
+   */
+  send(messageData){
+    const response=this.user.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        event:{
+          type:"message_create",
+          message_create:{
+            target:{
+              recipient_id:this.user.id
+            },
+            message_data:messageData
+          }
+        }
+      })
+    })
+    
+    return response
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const TWITTER_API_DATA={
   scopes:["tweet.read","tweet.write","tweet.moderate.write","users.read","follows.read","follows.write","offline.access","space.read","mute.read","mute.write","like.read","like.write","list.read","list.write","block.read","block.write","bookmark.read","bookmark.write"
   ],
