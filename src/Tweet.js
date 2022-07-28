@@ -91,7 +91,7 @@ class Tweet{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getAllLikedUsers(queryParameters={}){
+  getAllRetweetedUsers(queryParameters={}){
     queryParameters.max_results=100
     let pagination_token
     const result=[]
