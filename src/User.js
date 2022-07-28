@@ -231,12 +231,12 @@ class DMManager{
    * @param {User} user
    */
   constructor(user){
-    user.client.validate(["1.0a"])
     this.user=user
     this.client=user.client
   }
   
   send(messageData){
+    user.client.validate(["1.0a"])
     const response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
       method:"POST",
       contentType:"application/json",
@@ -256,6 +256,7 @@ class DMManager{
   }
 
   getMessages(queryParameters){
+    user.client.validate(["1.0a"])
     let response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/list.json",{
       method:"GET",
       queryParameters
