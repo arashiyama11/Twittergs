@@ -686,7 +686,7 @@ Twittergs.Tweet=class{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getAllLikedUsers(queryParameters={}){
+  getAllRetweetedUsers(queryParameters={}){
     queryParameters.max_results=100
     let pagination_token
     const result=[]
@@ -793,6 +793,7 @@ Twittergs.Tweet=class{
     })
   }
 }
+
 
 Twittergs.ClientTweet=class extends Twittergs.Tweet{
   /**
