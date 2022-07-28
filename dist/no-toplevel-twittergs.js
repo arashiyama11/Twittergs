@@ -794,7 +794,6 @@ Twittergs.Tweet=class{
   }
 }
 
-
 Twittergs.ClientTweet=class extends Twittergs.Tweet{
   /**
    * ツイートを削除します

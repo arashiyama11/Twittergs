@@ -792,7 +792,6 @@ class Tweet{
   }
 }
 
-
 class ClientTweet extends Tweet{
   /**
    * ツイートを削除します
