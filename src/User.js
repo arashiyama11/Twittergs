@@ -163,6 +163,34 @@ class User{
     }
     return result
   }
+
+  /**
+   * ユーザーをブロックします
+   * @returns {Object}
+   */
+  block(){
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/blocking`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        target_user_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * ユーザーをミュートします
+   * @returns {Object}
+   */
+  mute(){
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/muting`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        target_user_id:this.id
+      })
+    })
+  }
 }
 
 class ClientUser extends User{

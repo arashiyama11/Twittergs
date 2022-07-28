@@ -151,3 +151,33 @@ https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/ge
 [Twitterドキュメント](https://developer.twitter.com/en/docs/twitter-api/users/follows/api-reference/get-users-id-followers)を参照してください。
 
 ### 返り値 <Array<User\>\>
+
+## block():Object
+### 公式ドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/blocks/api-reference/post-users-user_id-blocking
+### 引数
+引数はありません
+### 返り値
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "blocking": true
+  }
+}
+```
+
+## mute():Object
+### 公式ドキュメント
+https://developer.twitter.com/en/docs/twitter-api/users/mutes/api-reference/post-users-user_id-muting
+### 引数
+引数はありません
+### 返り値
+成功すると以下のオブジェクトが返されます。
+```json
+{
+  "data": {
+    "muting": true
+  }
+}
+```
