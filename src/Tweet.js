@@ -54,6 +54,24 @@ class Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
+
+  /**
+   * いいねしたユーザーを全て取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getAllLikedUsers(queryParameters={}){
+    queryParameters.max_results=100
+    let pagination_token
+    const result=[]
+    do{
+      const res=this.getLikedUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
+  }
   /**
    * リツイートしたユーザーを取得します
    * https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/get-tweets-id-retweeted_by
@@ -66,6 +84,25 @@ class Tweet{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Util.shapeData(response,v=>new User(v,this.client))
   }
+
+   /**
+   * リツイートしたユーザーを全て取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getAllLikedUsers(queryParameters={}){
+    queryParameters.max_results=100
+    let pagination_token
+    const result=[]
+    do{
+      const res=this.getRetweetedUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
+  }
+
   /**
    * 引用リツイートを取得します
    * https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets

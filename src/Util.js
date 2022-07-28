@@ -47,7 +47,7 @@ const Util={
    * @returns {string}
    */
   buildParam(obj){
-    return Object.entries(obj).map(([k,v])=>Util.parcentEncode(k)+"="+Util.parcentEncode(v)).join("&")
+    return Object.entries(obj).filter(([k,v])=>v!==undefined).map(([k,v])=>Util.parcentEncode(k)+"="+Util.parcentEncode(v)).join("&")
   },
   /**
    * 

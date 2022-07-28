@@ -649,6 +649,24 @@ Twittergs.Tweet=class{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/liking_users`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
+
+  /**
+   * いいねしたユーザーを全て取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getAllLikedUsers(queryParameters={}){
+    queryParameters.max_results=100
+    let pagination_token
+    const result=[]
+    do{
+      const res=this.getLikedUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
+  }
   /**
    * リツイートしたユーザーを取得します
    * https://developer.twitter.com/en/docs/twitter-api/tweets/retweets/api-reference/get-tweets-id-retweeted_by
@@ -661,6 +679,25 @@ Twittergs.Tweet=class{
     let response=this.client.fetch(`https://api.twitter.com/2/tweets/${this.id}/retweeted_by`,{queryParameters})
     return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this.client))
   }
+
+   /**
+   * リツイートしたユーザーを全て取得します
+   * https://developer.twitter.com/en/docs/twitter-api/tweets/likes/api-reference/get-tweets-id-liking_users
+   * @param {Object} queryParameters 
+   * @returns {User[]}
+   */
+  getAllLikedUsers(queryParameters={}){
+    queryParameters.max_results=100
+    let pagination_token
+    const result=[]
+    do{
+      const res=this.getRetweetedUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
+  }
+
   /**
    * 引用リツイートを取得します
    * https://developer.twitter.com/en/docs/twitter-api/tweets/quote-tweets/api-reference/get-tweets-id-quote_tweets
@@ -757,7 +794,6 @@ Twittergs.Tweet=class{
   }
 }
 
-
 Twittergs.ClientTweet=class extends Twittergs.Tweet{
   /**
    * ツイートを削除します
@@ -778,7 +814,7 @@ Twittergs.User=class{
     else Object.assign(this,d)
     this.__proto__.client=client
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
-    this.dm=new DirectMessage(this)
+    this.dm=new DMManager(this)
   }
 
   validate(){
@@ -884,19 +920,15 @@ Twittergs.User=class{
    */
   getAllFollowingUsers(queryParameters={}){
     this.validate()
-    let token=undefined
     const result=[]
+    let pagination_token
     queryParameters.max_results=1000
-    let data=this.getFollowingUsers(queryParameters)
-    if(data.subData.meta.result_count===0)return data
-    token=data.subData.meta.next_token
-    result.push(...data)
-    while(token){
-      data=this.getFollowingUsers({pagination_token:token,...queryParameters})
-      token=data.subData.meta.next_token
-      result.push(...data)
-    }
-    return result
+    do{
+      const res=this.getFollowingUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
   }
 
   /**
@@ -911,7 +943,7 @@ Twittergs.User=class{
     let response=this.client.fetch(`https://api.twitter.com/2/users/${this.id}/followers`,{
       queryParameters:queryParameters||Twittergs.TWITTER_API_DATA.defaultQueryParameters.user
     })
-    return Twittergs.Util.shapeData(response,v=>new Twittergs.User(v,this))
+    return Twittergs.Util.margeMeta({data:response.data.map(v=>new Twittergs.User(v,this.client)),meta:response.meta})
   }
 
   /**
@@ -921,21 +953,44 @@ Twittergs.User=class{
    * @param {Object} queryParameters 
    * @returns {User[]}
    */
-  getAllFollowers(queryParameters={}){
+  getAllFollowingUsers(queryParameters={}){
     this.validate()
-    let token=undefined
     const result=[]
+    let pagination_token
     queryParameters.max_results=1000
-    let data=this.getFollowers(queryParameters)
-    if(data.subData.meta.result_count===0)return data
-    token=data.subData.meta.next_token
-    result.push(...data)
-    while(token){
-      data=this.getFollowers({pagination_token:token,...queryParameters})
-      token=data.subData.meta.next_token
-      result.push(...data)
-    }
-    return result
+    do{
+      const res=this.getFollowingUsers({...queryParameters,pagination_token})
+      pagination_token=res.subData.next_token
+      result.push(res)
+    }while(pagination_token)
+    return result.flat()
+  }
+   /**
+   * ユーザーをブロックします
+   * @returns {Object}
+   */
+  block(){
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/blocking`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        target_user_id:this.id
+      })
+    })
+  }
+  
+  /**
+   * ユーザーをミュートします
+   * @returns {Object}
+   */
+  mute(){
+    return this.client.fetch(`https://api.twitter.com/2/users/${this.client.user.id}/muting`,{
+      method:"POST",
+      contentType:"application/json",
+      payload:JSON.stringify({
+        target_user_id:this.id
+      })
+    })
   }
 }
 
@@ -981,21 +1036,18 @@ Twittergs.ClientUser=class extends Twittergs.User{
 }
 
 
-Twittergs.DirectMessage=class{
+Twittergs.DMManager=class{
   /**
    * @param {User} user
    */
   constructor(user){
     user.client.validate(["1.0a"])
     this.user=user
+    this.client=user.client
   }
-  /**
-   * ユーザーにDMを送信します
-   * @param {Object} messageData 
-   * @returns {Object}
-   */
+  
   send(messageData){
-    const response=this.user.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
+    const response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
       method:"POST",
       contentType:"application/json",
       payload:JSON.stringify({
@@ -1010,16 +1062,34 @@ Twittergs.DirectMessage=class{
         }
       })
     })
-    
     return response
+  }
+
+  getMessages(queryParameters){
+    let response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/list.json",{
+      method:"GET",
+      queryParameters
+    })
+    response.events=response.events.filter(({message_create:{sender_id,target:{recipient_id}}})=>sender_id===this.client.user.id&&recipient_id===this.user.id)
+    return Twittergs.Util.shapeData(response,v=>new DirectMessage(v,this.client),"events")
   }
 }
 
 
 
-
-
-
+Twittergs.DirectMessage=class{
+  constructor(d,client){
+    if(typeof d==="string")this.id=d
+    else Object.assign(this,d)
+    this.__proto__.client=client
+    if(this.message_create?.target?.recipient_id){
+      this.target=new Twittergs.User(this.message_create.target,client)
+    }
+    if(this.message_create?.sender_id){
+      this.sender=new Twittergs.User(this.message_create.sender_id,client)
+    }
+  }
+}
 
 
 
@@ -1078,7 +1148,7 @@ Twittergs.Util={
    * @returns {string}
    */
   buildParam(obj){
-    return Object.entries(obj).map(([k,v])=>Twittergs.Util.parcentEncode(k)+"="+Twittergs.Util.parcentEncode(v)).join("&")
+    return Object.entries(obj).filter(([k,v])=>v!==undefined).map(([k,v])=>Twittergs.Util.parcentEncode(k)+"="+Twittergs.Util.parcentEncode(v)).join("&")
   },
   /**
    * 
