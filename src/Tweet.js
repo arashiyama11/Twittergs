@@ -3,7 +3,11 @@ class Tweet{
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
     if(this.author_id)this.author=new User(this.author_id,client)
-    this.__proto__.client=client
+    Object.defineProperty(this,"client",{
+      get(){
+        return client
+      }
+    })
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
   }
 

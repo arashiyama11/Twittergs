@@ -2,7 +2,11 @@ class User{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
-    this.__proto__.client=client
+    Object.defineProperty(this,"client",{
+      get(){
+        return client
+      }
+    })
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
     this.dm=new DMManager(this)
   }

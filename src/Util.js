@@ -71,7 +71,7 @@ const Util={
    * @returns {Array}
    */
   shapeData(response,mkinstanceFn,mainData="data"){
-    const data=response[mainData].map(mkinstanceFn)||[]
+    const data=response[mainData]?.map(mkinstanceFn)||[]
     const sub=Object.fromEntries(Object.entries(response).filter(([k])=>k!==mainData))
     data.subData=sub
     return data
