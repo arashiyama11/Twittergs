@@ -558,7 +558,11 @@ Twittergs.List=class{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
-    this.__proto__.client=client
+    Object.defineProperty(this,"client",{
+      get(){
+        return client
+      }
+    })
   }
   validate(){
     if(!this.client)throw new Error("clientがありません")
@@ -598,7 +602,11 @@ Twittergs.Tweet=class{
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
     if(this.author_id)this.author=new Twittergs.User(this.author_id,client)
-    this.__proto__.client=client
+    Object.defineProperty(this,"client",{
+      get(){
+        return client
+      }
+    })
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
   }
 
@@ -813,7 +821,11 @@ Twittergs.User=class{
   constructor(d,client){
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
-    this.__proto__.client=client
+    Object.defineProperty(this,"client",{
+      get(){
+        return client
+      }
+    })
     if(typeof this.id==="number"&&this.id_str)this.id=this.id_str
     this.dm=new DMManager(this)
   }
@@ -1042,12 +1054,12 @@ Twittergs.DMManager=class{
    * @param {User} user
    */
   constructor(user){
-    user.client.validate(["1.0a"])
     this.user=user
     this.client=user.client
   }
   
   send(messageData){
+    user.client.validate(["1.0a"])
     const response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/new.json",{
       method:"POST",
       contentType:"application/json",
@@ -1067,6 +1079,7 @@ Twittergs.DMManager=class{
   }
 
   getMessages(queryParameters){
+    user.client.validate(["1.0a"])
     let response=this.client.fetch("https://api.twitter.com/1.1/direct_messages/events/list.json",{
       method:"GET",
       queryParameters
@@ -1173,7 +1186,7 @@ Twittergs.Util={
    * @returns {Array}
    */
   shapeData(response,mkinstanceFn,mainData="data"){
-    const data=response[mainData].map(mkinstanceFn)||[]
+    const data=response[mainData]?.map(mkinstanceFn)||[]
     const sub=Object.fromEntries(Object.entries(response).filter(([k])=>k!==mainData))
     data.subData=sub
     return data
