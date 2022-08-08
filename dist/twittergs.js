@@ -600,6 +600,9 @@ class Tweet{
     if(typeof d==="string")this.id=d
     else Object.assign(this,d)
     if(this.author_id)this.author=new User(this.author_id,client)
+    if(this.user){
+      this.author=new User(this.user,client)
+    }
     Object.defineProperty(this,"client",{
       get(){
         return client
